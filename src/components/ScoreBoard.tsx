@@ -1,21 +1,19 @@
-import { Undo2, RotateCcw, Flag, ArrowLeftRight, Play, Pause, Timer, Pencil } from 'lucide-react';
-import { Team, PointType, ActionType } from '@/types/volleyball';
+import { Undo2, RotateCcw, Flag, ArrowLeftRight, Play, Pause, Timer, Pencil, Plus, X } from 'lucide-react';
+import { Team, PointType, ActionType, OFFENSIVE_ACTIONS, FAULT_ACTIONS } from '@/types/volleyball';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 
 interface ScoreBoardProps {
   score: { blue: number; red: number };
   selectedTeam: Team | null;
-  selectedPointType: PointType;
-  selectedAction: ActionType;
+  selectedAction: ActionType | null;
   currentSetNumber: number;
   teamNames: { blue: string; red: string };
   sidesSwapped: boolean;
   chronoRunning: boolean;
   chronoSeconds: number;
-  onSelectTeam: (team: Team) => void;
-  onSelectPointType: (type: PointType) => void;
-  onSelectAction: (action: ActionType) => void;
+  onSelectAction: (team: Team, type: PointType, action: ActionType) => void;
+  onCancelSelection: () => void;
   onUndo: () => void;
   onReset: () => void;
   onEndSet: () => void;
@@ -26,40 +24,20 @@ interface ScoreBoardProps {
   canUndo: boolean;
 }
 
-const SCORED_ACTIONS: { key: ActionType; label: string }[] = [
-  { key: 'other', label: 'Autre' },
-  { key: 'service', label: 'Service' },
-  { key: 'attack', label: 'Attaque' },
-  { key: 'block_out', label: 'Block' },
-];
-
-const FAULT_ACTIONS: { key: ActionType; label: string }[] = [
-  { key: 'other', label: 'Autre' },
-  { key: 'service', label: 'Service' },
-  { key: 'attack', label: 'Attaque' },
-  { key: 'reception', label: 'Réception' },
-  { key: 'pass', label: 'Passe' },
-  { key: 'net_touch', label: 'Filet' },
-  { key: 'foot_fault', label: 'Pied' },
-  { key: 'block_out', label: 'Block' },
-  { key: 'rotation', label: 'Rotation' },
-  { key: 'carry', label: 'Portée' },
-];
-
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0');
   const s = (seconds % 60).toString().padStart(2, '0');
   return `${m}:${s}`;
 }
 
+type MenuTab = 'scored' | 'fault';
+
 export function ScoreBoard({
   score,
   selectedTeam,
-  selectedPointType,
   selectedAction,
-  onSelectTeam,
-  onSelectPointType,
   onSelectAction,
+  onCancelSelection,
   onUndo,
   onReset,
   onEndSet,
@@ -76,6 +54,8 @@ export function ScoreBoard({
 }: ScoreBoardProps) {
   const [editingNames, setEditingNames] = useState(false);
   const [nameInputs, setNameInputs] = useState(teamNames);
+  const [menuTeam, setMenuTeam] = useState<Team | null>(null);
+  const [menuTab, setMenuTab] = useState<MenuTab>('scored');
 
   const left: Team = sidesSwapped ? 'red' : 'blue';
   const right: Team = sidesSwapped ? 'blue' : 'red';
@@ -86,6 +66,22 @@ export function ScoreBoard({
       red: nameInputs.red.trim() || 'Rouge',
     });
     setEditingNames(false);
+  };
+
+  const handleActionSelect = (action: ActionType) => {
+    if (!menuTeam) return;
+    const type: PointType = menuTab === 'scored' ? 'scored' : 'fault';
+    onSelectAction(menuTeam, type, action);
+    setMenuTeam(null);
+  };
+
+  const openMenu = (team: Team) => {
+    setMenuTeam(team);
+    setMenuTab('scored');
+  };
+
+  const closeMenu = () => {
+    setMenuTeam(null);
   };
 
   return (
@@ -136,89 +132,103 @@ export function ScoreBoard({
         </button>
       )}
 
-      {/* Score display */}
+      {/* Score display with + buttons */}
       <div className="flex items-center justify-center gap-4">
         <div className="flex-1 text-center">
           <p className={`text-xs font-semibold uppercase tracking-widest ${left === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{teamNames[left]}</p>
           <p className={`text-5xl font-black tabular-nums ${left === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[left]}</p>
+          <button
+            onClick={() => openMenu(left)}
+            className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 ${
+              left === 'blue'
+                ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
+                : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
+            }`}
+          >
+            <Plus size={24} className="mx-auto" />
+          </button>
         </div>
         <div className="text-muted-foreground text-lg font-bold">VS</div>
         <div className="flex-1 text-center">
           <p className={`text-xs font-semibold uppercase tracking-widest ${right === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{teamNames[right]}</p>
           <p className={`text-5xl font-black tabular-nums ${right === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[right]}</p>
+          <button
+            onClick={() => openMenu(right)}
+            className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 ${
+              right === 'blue'
+                ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
+                : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
+            }`}
+          >
+            <Plus size={24} className="mx-auto" />
+          </button>
         </div>
       </div>
 
-      {/* Point type toggle */}
-      <div className="flex gap-2 justify-center">
-        <button
-          onClick={() => onSelectPointType('scored')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-            selectedPointType === 'scored'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-secondary text-secondary-foreground'
-          }`}
-        >
-          Point Marqué
-        </button>
-        <button
-          onClick={() => onSelectPointType('fault')}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-            selectedPointType === 'fault'
-              ? 'bg-destructive text-destructive-foreground'
-              : 'bg-secondary text-secondary-foreground'
-          }`}
-        >
-          Faute
-        </button>
-      </div>
+      {/* Action selection menu */}
+      {menuTeam && (
+        <div className="bg-card rounded-xl border border-border p-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between">
+            <p className={`text-sm font-bold ${menuTeam === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>
+              {teamNames[menuTeam]}
+            </p>
+            <button onClick={closeMenu} className="p-1 rounded-md text-muted-foreground hover:text-foreground">
+              <X size={16} />
+            </button>
+          </div>
+          {/* Tabs */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setMenuTab('scored')}
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                menuTab === 'scored' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+              }`}
+            >
+              ⚡ Points Gagnés
+            </button>
+            <button
+              onClick={() => setMenuTab('fault')}
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                menuTab === 'fault' ? 'bg-destructive text-destructive-foreground' : 'bg-secondary text-secondary-foreground'
+              }`}
+            >
+              ❌ Fautes Commises
+            </button>
+          </div>
+          {/* Actions */}
+          <div className="grid grid-cols-3 gap-1.5">
+            {(menuTab === 'scored' ? OFFENSIVE_ACTIONS : FAULT_ACTIONS).map(a => (
+              <button
+                key={a.key}
+                onClick={() => handleActionSelect(a.key)}
+                className={`py-2.5 px-2 text-xs font-semibold rounded-lg transition-all active:scale-95 ${
+                  menuTab === 'scored'
+                    ? 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
+                    : 'bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20'
+                }`}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* Action type */}
-      <div className="flex gap-1.5 justify-center flex-wrap">
-        {(selectedPointType === 'fault' ? FAULT_ACTIONS : SCORED_ACTIONS).map(a => (
-          <button
-            key={a.key}
-            onClick={() => onSelectAction(a.key)}
-            className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
-              selectedAction === a.key
-                ? 'bg-accent text-accent-foreground ring-1 ring-primary'
-                : 'bg-secondary/60 text-muted-foreground hover:bg-secondary'
-            }`}
-          >
-            {a.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Team buttons */}
-      <div className="flex gap-3">
-        <button
-          onClick={() => onSelectTeam(left)}
-          className={`flex-1 py-4 rounded-xl font-bold text-lg transition-all active:scale-95 ${
-            selectedTeam === left
-              ? `${left === 'blue' ? 'bg-team-blue text-team-blue-foreground team-blue-glow' : 'bg-team-red text-team-red-foreground team-red-glow'} scale-105`
-              : `${left === 'blue' ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30' : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'}`
-          }`}
-        >
-          {left === 'blue' ? '🔵' : '🔴'} {teamNames[left]}
-        </button>
-        <button
-          onClick={() => onSelectTeam(right)}
-          className={`flex-1 py-4 rounded-xl font-bold text-lg transition-all active:scale-95 ${
-            selectedTeam === right
-              ? `${right === 'blue' ? 'bg-team-blue text-team-blue-foreground team-blue-glow' : 'bg-team-red text-team-red-foreground team-red-glow'} scale-105`
-              : `${right === 'blue' ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30' : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'}`
-          }`}
-        >
-          {right === 'blue' ? '🔵' : '🔴'} {teamNames[right]}
-        </button>
-      </div>
-
-      {/* Status */}
-      {selectedTeam && (
-        <p className="text-center text-sm text-muted-foreground animate-pulse">
-          Touchez le terrain pour placer le point
-        </p>
+      {/* Active selection indicator */}
+      {selectedTeam && selectedAction && (
+        <div className="flex items-center justify-between bg-accent/50 rounded-lg p-2.5 border border-accent">
+          <p className="text-sm text-foreground">
+            <span className="font-bold">{teamNames[selectedTeam]}</span> — {
+              [...OFFENSIVE_ACTIONS, ...FAULT_ACTIONS].find(a => a.key === selectedAction)?.label
+            }
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground animate-pulse">Touchez le terrain</span>
+            <button onClick={onCancelSelection} className="p-1 rounded-md text-muted-foreground hover:text-foreground">
+              <X size={14} />
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Action buttons */}

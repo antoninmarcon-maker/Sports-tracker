@@ -8,8 +8,8 @@ export function useMatchState(matchId: string) {
   const [currentSetNumber, setCurrentSetNumber] = useState(loaded?.currentSetNumber ?? 1);
   const [points, setPoints] = useState<Point[]>(loaded?.points ?? []);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-  const [selectedPointType, setSelectedPointType] = useState<PointType>('scored');
-  const [selectedAction, setSelectedAction] = useState<ActionType>('other');
+  const [selectedPointType, setSelectedPointType] = useState<PointType | null>(null);
+  const [selectedAction, setSelectedAction] = useState<ActionType | null>(null);
   const [teamNames, setTeamNames] = useState(loaded?.teamNames ?? { blue: 'Bleue', red: 'Rouge' });
   const [sidesSwapped, setSidesSwapped] = useState(loaded?.sidesSwapped ?? false);
 
@@ -38,8 +38,20 @@ export function useMatchState(matchId: string) {
     setChronoSeconds(0);
   }, []);
 
+  const selectAction = useCallback((team: Team, type: PointType, action: ActionType) => {
+    setSelectedTeam(team);
+    setSelectedPointType(type);
+    setSelectedAction(action);
+  }, []);
+
+  const cancelSelection = useCallback(() => {
+    setSelectedTeam(null);
+    setSelectedPointType(null);
+    setSelectedAction(null);
+  }, []);
+
   const addPoint = useCallback((x: number, y: number) => {
-    if (!selectedTeam) return;
+    if (!selectedTeam || !selectedPointType || !selectedAction) return;
     if (!chronoRunning && points.length === 0) {
       setChronoRunning(true);
     }
@@ -54,8 +66,8 @@ export function useMatchState(matchId: string) {
     };
     setPoints(prev => [...prev, point]);
     setSelectedTeam(null);
-    setSelectedPointType('scored');
-    setSelectedAction('other');
+    setSelectedPointType(null);
+    setSelectedAction(null);
   }, [selectedTeam, selectedPointType, selectedAction, chronoRunning, points.length]);
 
   const undo = useCallback(() => {
@@ -105,6 +117,8 @@ export function useMatchState(matchId: string) {
     setCompletedSets(prev => [...prev, setData]);
     setPoints([]);
     setSelectedTeam(null);
+    setSelectedPointType(null);
+    setSelectedAction(null);
     setCurrentSetNumber(prev => prev + 1);
     setSidesSwapped(prev => !prev);
     resetChrono();
@@ -119,6 +133,8 @@ export function useMatchState(matchId: string) {
     setCompletedSets([]);
     setCurrentSetNumber(1);
     setSelectedTeam(null);
+    setSelectedPointType(null);
+    setSelectedAction(null);
     setSidesSwapped(false);
     resetChrono();
   }, [resetChrono]);
@@ -153,10 +169,9 @@ export function useMatchState(matchId: string) {
     sidesSwapped,
     chronoRunning,
     chronoSeconds,
-    setSelectedTeam,
-    setSelectedPointType,
-    setSelectedAction,
     setTeamNames,
+    selectAction,
+    cancelSelection,
     addPoint,
     undo,
     endSet,
