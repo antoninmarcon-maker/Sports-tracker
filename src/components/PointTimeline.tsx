@@ -85,6 +85,20 @@ export function PointTimeline({ points, teamNames }: PointTimelineProps) {
     return rows;
   }, [points]);
 
+  const maxScore = useMemo(() => {
+    if (data.length <= 1) return 25;
+    const max = Math.max(...data.map(d => Math.max(d.blue, d.red)));
+    return Math.max(max + 2, 5); // at least 5, with 2 padding
+  }, [data]);
+
+  const yTicks = useMemo(() => {
+    const step = maxScore <= 10 ? 1 : maxScore <= 20 ? 2 : 5;
+    const ticks: number[] = [];
+    for (let i = 0; i <= maxScore; i += step) ticks.push(i);
+    if (ticks[ticks.length - 1] !== maxScore) ticks.push(maxScore);
+    return ticks;
+  }, [maxScore]);
+
   if (data.length <= 1) {
     return (
       <div className="bg-card rounded-xl p-4 border border-border text-center">
@@ -109,8 +123,8 @@ export function PointTimeline({ points, teamNames }: PointTimelineProps) {
             />
             <YAxis
               allowDecimals={false}
-              domain={[0, 25]}
-              ticks={[0, 5, 10, 15, 20, 25]}
+              domain={[0, maxScore]}
+              ticks={yTicks}
               tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
               label={{ value: 'Points', angle: -90, position: 'insideLeft', offset: 20, fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
             />
