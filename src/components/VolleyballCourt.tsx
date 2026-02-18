@@ -9,7 +9,7 @@ interface VolleyballCourtProps {
   onCourtClick: (x: number, y: number) => void;
 }
 
-export function VolleyballCourt({ points, selectedTeam, sidesSwapped, teamNames, onCourtClick }: VolleyballCourtProps) {
+export function VolleyballCourt({ points, selectedTeam, sidesSwapped = false, teamNames = { blue: 'Bleue', red: 'Rouge' }, onCourtClick }: VolleyballCourtProps) {
   const courtRef = useRef<SVGSVGElement>(null);
 
   const handleClick = useCallback(
