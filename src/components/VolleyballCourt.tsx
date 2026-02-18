@@ -18,25 +18,24 @@ const COURT_TOP = 20;
 const COURT_BOTTOM = 380;
 const NET_X = 300;
 
-type ZoneType = 'left_court' | 'right_court' | 'outside_left' | 'outside_right' | 'net' | 'outside_sides_left' | 'outside_sides_right' | 'none';
+type ZoneType = 'left_court' | 'right_court' | 'outside_left' | 'outside_right' | 'net_left' | 'net_right' | 'none';
 
 function getClickZone(svgX: number, svgY: number): ZoneType {
   const isInsideCourt = svgX >= COURT_LEFT && svgX <= COURT_RIGHT && svgY >= COURT_TOP && svgY <= COURT_BOTTOM;
   
   if (isInsideCourt) {
     // Net zone: within 15px of center line
-    if (Math.abs(svgX - NET_X) < 15) return 'net';
+    if (Math.abs(svgX - NET_X) < 15) {
+      // Distinguish left-net vs right-net
+      return svgX <= NET_X ? 'net_left' : 'net_right';
+    }
     if (svgX < NET_X) return 'left_court';
     return 'right_court';
   }
   
   // Outside zones
-  if (svgX < COURT_LEFT || svgX > COURT_RIGHT || svgY < COURT_TOP || svgY > COURT_BOTTOM) {
-    if (svgX < NET_X) return 'outside_left';
-    return 'outside_right';
-  }
-  
-  return 'none';
+  if (svgX < NET_X) return 'outside_left';
+  return 'outside_right';
 }
 
 function isZoneAllowed(
@@ -46,32 +45,32 @@ function isZoneAllowed(
   pointType: PointType,
   sidesSwapped: boolean
 ): boolean {
-  // Determine which side is whose
+  // team = the team that RECEIVES the point (scores)
+  // The opponent is the one who committed the fault
   const teamSide = sidesSwapped
     ? (team === 'blue' ? 'right' : 'left')
     : (team === 'blue' ? 'left' : 'right');
   const opponentSide = teamSide === 'left' ? 'right' : 'left';
   const opponentCourt = opponentSide === 'left' ? 'left_court' : 'right_court';
-  const ownCourt = teamSide === 'left' ? 'left_court' : 'right_court';
-  const outsideOpponent = opponentSide === 'left' ? 'outside_left' : 'outside_right';
-  const outsideOwn = teamSide === 'left' ? 'outside_left' : 'outside_right';
 
   if (isOffensiveAction(action)) {
-    // Offensive: only opponent court
+    // Offensive: scoring team hits INTO opponent court
     return zone === opponentCourt;
   }
 
-  // Faults
+  // Faults: the OPPONENT committed the fault, so zones relate to opponent's side
   switch (action) {
     case 'service_miss':
     case 'out':
-      // Outside opponent zone
-      return zone === outsideOpponent;
+      // Ball went out around the SCORING team's court (opponent hit it out of scoring team's side)
+      // i.e. outside the team's own court area
+      return zone === (teamSide === 'left' ? 'outside_left' : 'outside_right');
     case 'net_fault':
-      return zone === 'net';
+      // Opponent touched the net on THEIR side of the net
+      return zone === (opponentSide === 'left' ? 'net_left' : 'net_right');
     case 'block_out':
-      // Outside own camp (where ball rebounded after block)
-      return zone === outsideOwn;
+      // Ball went out anywhere after a block - both sides allowed
+      return zone === 'outside_left' || zone === 'outside_right';
     default:
       return true;
   }
@@ -83,7 +82,7 @@ function getZoneHighlights(
   action: ActionType,
   pointType: PointType,
   sidesSwapped: boolean
-): { allowed: { x: number; y: number; w: number; h: number }[]; isNet?: boolean } {
+): { allowed: { x: number; y: number; w: number; h: number }[] } {
   const teamSide = sidesSwapped
     ? (team === 'blue' ? 'right' : 'left')
     : (team === 'blue' ? 'left' : 'right');
@@ -100,24 +99,7 @@ function getZoneHighlights(
   switch (action) {
     case 'service_miss':
     case 'out': {
-      // Outside opponent
-      if (opponentSide === 'right') {
-        return { allowed: [
-          { x: COURT_RIGHT, y: 0, w: 600 - COURT_RIGHT, h: 400 },
-          { x: NET_X, y: 0, w: COURT_RIGHT - NET_X, h: COURT_TOP },
-          { x: NET_X, y: COURT_BOTTOM, w: COURT_RIGHT - NET_X, h: 400 - COURT_BOTTOM },
-        ]};
-      }
-      return { allowed: [
-        { x: 0, y: 0, w: COURT_LEFT, h: 400 },
-        { x: COURT_LEFT, y: 0, w: NET_X - COURT_LEFT, h: COURT_TOP },
-        { x: COURT_LEFT, y: COURT_BOTTOM, w: NET_X - COURT_LEFT, h: 400 - COURT_BOTTOM },
-      ]};
-    }
-    case 'net_fault':
-      return { allowed: [{ x: NET_X - 15, y: COURT_TOP, w: 30, h: COURT_BOTTOM - COURT_TOP }], isNet: true };
-    case 'block_out': {
-      // Outside own camp
+      // Outside scoring team's court (ball went out on their side)
       if (teamSide === 'left') {
         return { allowed: [
           { x: 0, y: 0, w: COURT_LEFT, h: 400 },
@@ -129,6 +111,22 @@ function getZoneHighlights(
         { x: COURT_RIGHT, y: 0, w: 600 - COURT_RIGHT, h: 400 },
         { x: NET_X, y: 0, w: COURT_RIGHT - NET_X, h: COURT_TOP },
         { x: NET_X, y: COURT_BOTTOM, w: COURT_RIGHT - NET_X, h: 400 - COURT_BOTTOM },
+      ]};
+    }
+    case 'net_fault': {
+      // Opponent's side of the net
+      if (opponentSide === 'left') {
+        return { allowed: [{ x: NET_X - 15, y: COURT_TOP, w: 15, h: COURT_BOTTOM - COURT_TOP }] };
+      }
+      return { allowed: [{ x: NET_X, y: COURT_TOP, w: 15, h: COURT_BOTTOM - COURT_TOP }] };
+    }
+    case 'block_out': {
+      // All outside zones (both sides)
+      return { allowed: [
+        { x: 0, y: 0, w: COURT_LEFT, h: 400 },
+        { x: COURT_LEFT, y: 0, w: COURT_RIGHT - COURT_LEFT, h: COURT_TOP },
+        { x: COURT_LEFT, y: COURT_BOTTOM, w: COURT_RIGHT - COURT_LEFT, h: 400 - COURT_BOTTOM },
+        { x: COURT_RIGHT, y: 0, w: 600 - COURT_RIGHT, h: 400 },
       ]};
     }
     default:
