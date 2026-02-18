@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Player } from '@/types/volleyball';
 import { X } from 'lucide-react';
 
@@ -9,8 +10,15 @@ interface PlayerSelectorProps {
 }
 
 export function PlayerSelector({ players, prompt, onSelect, onSkip }: PlayerSelectorProps) {
+  // Prevent the court tap's delayed "click" from immediately dismissing the overlay
+  const [interactive, setInteractive] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setInteractive(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center sm:items-center p-4" onClick={onSkip}>
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center sm:items-center p-4" onClick={() => interactive && onSkip()}>
       <div
         className="bg-card rounded-2xl p-4 max-w-sm w-full border border-border space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-200"
         onClick={e => e.stopPropagation()}
