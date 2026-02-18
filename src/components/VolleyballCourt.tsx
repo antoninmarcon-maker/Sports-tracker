@@ -75,31 +75,36 @@ export function VolleyballCourt({ points, selectedTeam, sidesSwapped = false, te
         </text>
 
         {/* Point markers */}
-        {points.filter(p => p.type === 'scored').map((point) => {
+        {points.map((point) => {
           const cx = point.x * 600;
           const cy = point.y * 400;
           const color = point.team === 'blue' ? 'hsl(217, 91%, 60%)' : 'hsl(0, 84%, 60%)';
           const isFault = point.type === 'fault';
-          const actionLetter = point.action === 'service' ? 'S' : point.action === 'attack' ? 'A' : point.action === 'block_out' ? 'B' : null;
+          const ACTION_SHORT: Record<string, string> = {
+            service: 'S', attack: 'A', block_out: 'B', reception: 'R',
+            pass: 'P', net_touch: 'F', foot_fault: 'Pi', rotation: 'Ro', carry: 'Po',
+          };
+          const actionLetter = ACTION_SHORT[point.action] ?? null;
           return (
             <g key={point.id} className="animate-point-drop">
               <circle
                 cx={cx}
                 cy={cy}
                 r={9}
-                fill={color}
+                fill={isFault ? 'transparent' : color}
                 opacity={0.85}
-                stroke="white"
-                strokeWidth={isFault ? 1 : 1.5}
+                stroke={color}
+                strokeWidth={isFault ? 2 : 1.5}
+                strokeDasharray={isFault ? '3 2' : 'none'}
               />
               {isFault && !actionLetter && (
                 <>
-                  <line x1={cx - 3.5} y1={cy - 3.5} x2={cx + 3.5} y2={cy + 3.5} stroke="white" strokeWidth="1.5" />
-                  <line x1={cx + 3.5} y1={cy - 3.5} x2={cx - 3.5} y2={cy + 3.5} stroke="white" strokeWidth="1.5" />
+                  <line x1={cx - 3.5} y1={cy - 3.5} x2={cx + 3.5} y2={cy + 3.5} stroke={color} strokeWidth="1.5" />
+                  <line x1={cx + 3.5} y1={cy - 3.5} x2={cx - 3.5} y2={cy + 3.5} stroke={color} strokeWidth="1.5" />
                 </>
               )}
               {actionLetter && (
-                <text x={cx} y={cy + 4} textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">{actionLetter}</text>
+                <text x={cx} y={cy + 4} textAnchor="middle" fill={isFault ? color : 'white'} fontSize="10" fontWeight="bold">{actionLetter}</text>
               )}
             </g>
           );
