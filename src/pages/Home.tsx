@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, History, Trash2, Eye, Play } from 'lucide-react';
+import { Plus, History, Trash2, Eye, Play, Info } from 'lucide-react';
 import logoCapbreton from '@/assets/logo-capbreton.jpeg';
 import { Input } from '@/components/ui/input';
 import { getAllMatches, createNewMatch, saveMatch, setActiveMatchId, deleteMatch } from '@/lib/matchStorage';
@@ -14,6 +14,26 @@ function matchScore(match: MatchSummary) {
   const blue = match.completedSets.filter(s => s.winner === 'blue').length;
   const red = match.completedSets.filter(s => s.winner === 'red').length;
   return { blue, red };
+}
+
+function Instructions() {
+  return (
+    <div className="bg-card rounded-xl p-5 border border-border space-y-3">
+      <div className="flex items-center gap-2">
+        <Info size={16} className="text-primary" />
+        <h3 className="text-sm font-bold text-foreground">Comment ça marche ?</h3>
+      </div>
+      <div className="text-sm text-muted-foreground space-y-2">
+        <p><strong className="text-foreground">1. Créez un match</strong> en appuyant sur « Nouveau Match » ci-dessus et nommez les deux équipes.</p>
+        <p><strong className="text-foreground">2. Appuyez sur « + »</strong> sous le score de l'équipe qui marque ou commet une faute.</p>
+        <p><strong className="text-foreground">3. Choisissez l'action</strong> : <em>Points Gagnés</em> (Attaque, Ace, Block, Bidouille, Seconde main) ou <em>Fautes</em> (Out, Filet, Service loupé, Block Out).</p>
+        <p><strong className="text-foreground">4. Placez sur le terrain</strong> : seule la zone autorisée s'illumine. Cliquez pour valider le point.</p>
+        <p><strong className="text-foreground">5. Gérez les sets</strong> : « Fin du Set » termine et inverse les côtés automatiquement.</p>
+        <p><strong className="text-foreground">6. Statistiques</strong> : consultez le détail par set avec heatmap des actions offensives.</p>
+        <p><strong className="text-foreground">7. Exportez</strong> : téléchargez un récapitulatif en image PNG.</p>
+      </div>
+    </div>
+  );
 }
 
 export default function Home() {
@@ -111,8 +131,8 @@ export default function Home() {
             <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Matchs précédents</h2>
           </div>
 
-          {matches.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">Aucun match enregistré</p>
+        {matches.length === 0 ? (
+            <Instructions />
           ) : (
             <div className="space-y-2">
               {matches.map(match => {

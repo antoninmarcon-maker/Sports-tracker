@@ -138,14 +138,15 @@ const Index = () => {
             <button onClick={() => setShowHelp(false)} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
               <X size={18} />
             </button>
-            <h2 className="text-lg font-bold text-foreground">Comment utiliser l'app ?</h2>
+            <h2 className="text-lg font-bold text-foreground">Comment ça marche ?</h2>
             <div className="text-sm text-muted-foreground space-y-2">
-              <p><strong className="text-foreground">1. Appuyez sur "+"</strong> sous le score de l'équipe concernée.</p>
-              <p><strong className="text-foreground">2. Choisissez la catégorie</strong> : "Points Gagnés" ou "Fautes Commises".</p>
-              <p><strong className="text-foreground">3. Sélectionnez l'action</strong> : Attaque, Ace, Block, Out, Filet, etc.</p>
-              <p><strong className="text-foreground">4. Placez sur le terrain</strong> : Seule la zone autorisée est cliquable (le reste est grisé).</p>
-              <p><strong className="text-foreground">5. Gestion des sets</strong> : "Fin du Set" pour terminer, "Switch" pour inverser les côtés.</p>
-              <p><strong className="text-foreground">6. Statistiques</strong> : L'onglet Stats affiche le détail par set avec heatmap des actions offensives.</p>
+              <p><strong className="text-foreground">1. Appuyez sur « + »</strong> sous le score de l'équipe qui marque (ou qui commet la faute).</p>
+              <p><strong className="text-foreground">2. Choisissez l'onglet</strong> : <em>Points Gagnés</em> (Attaque, Ace, Block, Bidouille, Seconde main) ou <em>Fautes Commises</em> (Out, Filet, Service loupé, Block Out).</p>
+              <p><strong className="text-foreground">3. Cliquez sur l'action</strong> correspondante.</p>
+              <p><strong className="text-foreground">4. Placez sur le terrain</strong> : la zone autorisée s'illumine, le reste est grisé. Cliquez pour valider le point.</p>
+              <p><strong className="text-foreground">5. Gérez les sets</strong> : « Fin du Set » termine le set en cours et inverse automatiquement les côtés. Utilisez « Switch » pour inverser manuellement.</p>
+              <p><strong className="text-foreground">6. Statistiques</strong> : l'onglet Stats détaille chaque action par set avec une heatmap des actions offensives.</p>
+              <p><strong className="text-foreground">7. Exportez</strong> : téléchargez un récapitulatif en image PNG depuis l'onglet Statistiques.</p>
             </div>
           </div>
         </div>
