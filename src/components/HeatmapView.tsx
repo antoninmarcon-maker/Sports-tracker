@@ -243,17 +243,19 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
         <p className="text-[8px] text-muted-foreground/50 text-center">Volley Tracker · Capbreton</p>
       </div>
 
-      {showTimeline && (
+      {setFilter_ !== 'all' && showTimeline && (
         <PointTimeline points={filteredPoints} teamNames={teamNames} />
       )}
 
       <div className="flex gap-2">
-        <button
-          onClick={() => setShowTimeline(prev => !prev)}
-          className="flex-1 py-2.5 text-sm font-semibold rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
-        >
-          {showTimeline ? 'Masquer l\'historique' : 'Afficher l\'historique'}
-        </button>
+        {setFilter_ !== 'all' && (
+          <button
+            onClick={() => setShowTimeline(prev => !prev)}
+            className="flex-1 py-2.5 text-sm font-semibold rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
+          >
+            {showTimeline ? 'Masquer l\'historique' : 'Afficher l\'historique'}
+          </button>
+        )}
         <button
           onClick={() => setShowHeatmap(prev => !prev)}
           className="flex-1 py-2.5 text-sm font-semibold rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"

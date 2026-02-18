@@ -109,6 +109,8 @@ export function PointTimeline({ points, teamNames }: PointTimelineProps) {
             />
             <YAxis
               allowDecimals={false}
+              domain={[0, 25]}
+              ticks={[0, 5, 10, 15, 20, 25]}
               tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
               label={{ value: 'Points', angle: -90, position: 'insideLeft', offset: 20, fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
             />
