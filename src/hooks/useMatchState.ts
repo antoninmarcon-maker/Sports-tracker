@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
-import { Team, Point, PointType, SetData } from '@/types/volleyball';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { Team, Point, PointType, ActionType, SetData } from '@/types/volleyball';
 
 export function useMatchState() {
   const [completedSets, setCompletedSets] = useState<SetData[]>([]);
@@ -7,20 +7,53 @@ export function useMatchState() {
   const [points, setPoints] = useState<Point[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [selectedPointType, setSelectedPointType] = useState<PointType>('scored');
+  const [selectedAction, setSelectedAction] = useState<ActionType>('other');
+  const [teamNames, setTeamNames] = useState({ blue: 'Bleue', red: 'Rouge' });
+  const [sidesSwapped, setSidesSwapped] = useState(false);
+
+  // Chrono
+  const [chronoRunning, setChronoRunning] = useState(false);
+  const [chronoSeconds, setChronoSeconds] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (chronoRunning) {
+      intervalRef.current = setInterval(() => {
+        setChronoSeconds(prev => prev + 1);
+      }, 1000);
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [chronoRunning]);
+
+  const startChrono = useCallback(() => setChronoRunning(true), []);
+  const pauseChrono = useCallback(() => setChronoRunning(false), []);
+  const resetChrono = useCallback(() => {
+    setChronoRunning(false);
+    setChronoSeconds(0);
+  }, []);
 
   const addPoint = useCallback((x: number, y: number) => {
     if (!selectedTeam) return;
+    // Auto-start chrono on first point
+    if (!chronoRunning && points.length === 0) {
+      setChronoRunning(true);
+    }
     const point: Point = {
       id: crypto.randomUUID(),
       team: selectedTeam,
       type: selectedPointType,
+      action: selectedAction,
       x,
       y,
       timestamp: Date.now(),
     };
     setPoints(prev => [...prev, point]);
     setSelectedTeam(null);
-  }, [selectedTeam, selectedPointType]);
+  }, [selectedTeam, selectedPointType, selectedAction, chronoRunning, points.length]);
 
   const undo = useCallback(() => {
     setPoints(prev => prev.slice(0, -1));
@@ -64,35 +97,55 @@ export function useMatchState() {
       points: [...points],
       score: { ...score },
       winner,
+      duration: chronoSeconds,
     };
     setCompletedSets(prev => [...prev, setData]);
     setPoints([]);
     setSelectedTeam(null);
     setCurrentSetNumber(prev => prev + 1);
-  }, [points, score, currentSetNumber]);
+    setSidesSwapped(prev => !prev);
+    resetChrono();
+  }, [points, score, currentSetNumber, chronoSeconds, resetChrono]);
+
+  const switchSides = useCallback(() => {
+    setSidesSwapped(prev => !prev);
+  }, []);
 
   const resetMatch = useCallback(() => {
     setPoints([]);
     setCompletedSets([]);
     setCurrentSetNumber(1);
     setSelectedTeam(null);
-  }, []);
+    setSidesSwapped(false);
+    resetChrono();
+  }, [resetChrono]);
 
   return {
     points,
     allPoints,
     selectedTeam,
     selectedPointType,
+    selectedAction,
     score,
     stats,
     setsScore,
     currentSetNumber,
     completedSets,
+    teamNames,
+    sidesSwapped,
+    chronoRunning,
+    chronoSeconds,
     setSelectedTeam,
     setSelectedPointType,
+    setSelectedAction,
+    setTeamNames,
     addPoint,
     undo,
     endSet,
     resetMatch,
+    switchSides,
+    startChrono,
+    pauseChrono,
+    resetChrono,
   };
 }

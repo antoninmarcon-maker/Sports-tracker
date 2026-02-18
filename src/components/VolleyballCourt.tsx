@@ -4,10 +4,12 @@ import { Point, Team } from '@/types/volleyball';
 interface VolleyballCourtProps {
   points: Point[];
   selectedTeam: Team | null;
+  sidesSwapped: boolean;
+  teamNames: { blue: string; red: string };
   onCourtClick: (x: number, y: number) => void;
 }
 
-export function VolleyballCourt({ points, selectedTeam, onCourtClick }: VolleyballCourtProps) {
+export function VolleyballCourt({ points, selectedTeam, sidesSwapped, teamNames, onCourtClick }: VolleyballCourtProps) {
   const courtRef = useRef<SVGSVGElement>(null);
 
   const handleClick = useCallback(
@@ -34,44 +36,48 @@ export function VolleyballCourt({ points, selectedTeam, onCourtClick }: Volleyba
     [selectedTeam, onCourtClick]
   );
 
+  const topTeam: Team = sidesSwapped ? 'red' : 'blue';
+  const bottomTeam: Team = sidesSwapped ? 'blue' : 'red';
+
   return (
     <div className={`relative rounded-xl overflow-hidden transition-all ${selectedTeam ? 'ring-2 ring-primary cursor-crosshair' : ''}`}>
+      {/* Horizontal layout: viewBox is landscape */}
       <svg
         ref={courtRef}
-        viewBox="0 0 400 600"
+        viewBox="0 0 600 400"
         className="w-full h-auto"
         onClick={handleClick}
         onTouchStart={handleTouch}
       >
         {/* Court background */}
-        <rect x="0" y="0" width="400" height="600" rx="8" fill="hsl(142, 40%, 28%)" />
+        <rect x="0" y="0" width="600" height="400" rx="8" fill="hsl(142, 40%, 28%)" />
 
         {/* Court border */}
-        <rect x="20" y="20" width="360" height="560" rx="4" fill="none" stroke="white" strokeWidth="2" opacity="0.9" />
+        <rect x="20" y="20" width="560" height="360" rx="4" fill="none" stroke="white" strokeWidth="2" opacity="0.9" />
 
-        {/* Net (center line) */}
-        <line x1="20" y1="300" x2="380" y2="300" stroke="white" strokeWidth="3" />
-        <line x1="20" y1="300" x2="380" y2="300" stroke="white" strokeWidth="1" strokeDasharray="8 4" opacity="0.5" />
+        {/* Net (center vertical line) */}
+        <line x1="300" y1="20" x2="300" y2="380" stroke="white" strokeWidth="3" />
+        <line x1="300" y1="20" x2="300" y2="380" stroke="white" strokeWidth="1" strokeDasharray="8 4" opacity="0.5" />
 
         {/* Attack lines (3m lines) */}
-        <line x1="20" y1="200" x2="380" y2="200" stroke="white" strokeWidth="1.5" opacity="0.6" />
-        <line x1="20" y1="400" x2="380" y2="400" stroke="white" strokeWidth="1.5" opacity="0.6" />
+        <line x1="200" y1="20" x2="200" y2="380" stroke="white" strokeWidth="1.5" opacity="0.6" />
+        <line x1="400" y1="20" x2="400" y2="380" stroke="white" strokeWidth="1.5" opacity="0.6" />
 
-        {/* Center marks */}
-        <line x1="200" y1="20" x2="200" y2="580" stroke="white" strokeWidth="0.5" opacity="0.15" />
+        {/* Center horizontal guide */}
+        <line x1="20" y1="200" x2="580" y2="200" stroke="white" strokeWidth="0.5" opacity="0.15" />
 
         {/* Team labels */}
-        <text x="200" y="160" textAnchor="middle" fill="hsl(217, 91%, 60%)" fontSize="14" fontWeight="bold" opacity="0.6">
-          BLEUE
+        <text x="110" y="205" textAnchor="middle" fill={topTeam === 'blue' ? 'hsl(217, 91%, 60%)' : 'hsl(0, 84%, 60%)'} fontSize="13" fontWeight="bold" opacity="0.5">
+          {teamNames[topTeam]}
         </text>
-        <text x="200" y="460" textAnchor="middle" fill="hsl(0, 84%, 60%)" fontSize="14" fontWeight="bold" opacity="0.6">
-          ROUGE
+        <text x="490" y="205" textAnchor="middle" fill={bottomTeam === 'blue' ? 'hsl(217, 91%, 60%)' : 'hsl(0, 84%, 60%)'} fontSize="13" fontWeight="bold" opacity="0.5">
+          {teamNames[bottomTeam]}
         </text>
 
         {/* Point markers */}
         {points.map((point) => {
-          const cx = point.x * 400;
-          const cy = point.y * 600;
+          const cx = point.x * 600;
+          const cy = point.y * 400;
           const color = point.team === 'blue' ? 'hsl(217, 91%, 60%)' : 'hsl(0, 84%, 60%)';
           const isFault = point.type === 'fault';
           return (
@@ -79,7 +85,7 @@ export function VolleyballCourt({ points, selectedTeam, onCourtClick }: Volleyba
               <circle
                 cx={cx}
                 cy={cy}
-                r={isFault ? 8 : 10}
+                r={isFault ? 7 : 9}
                 fill={color}
                 opacity={0.85}
                 stroke="white"
@@ -87,8 +93,8 @@ export function VolleyballCourt({ points, selectedTeam, onCourtClick }: Volleyba
               />
               {isFault && (
                 <>
-                  <line x1={cx - 4} y1={cy - 4} x2={cx + 4} y2={cy + 4} stroke="white" strokeWidth="1.5" />
-                  <line x1={cx + 4} y1={cy - 4} x2={cx - 4} y2={cy + 4} stroke="white" strokeWidth="1.5" />
+                  <line x1={cx - 3.5} y1={cy - 3.5} x2={cx + 3.5} y2={cy + 3.5} stroke="white" strokeWidth="1.5" />
+                  <line x1={cx + 3.5} y1={cy - 3.5} x2={cx - 3.5} y2={cy + 3.5} stroke="white" strokeWidth="1.5" />
                 </>
               )}
             </g>
