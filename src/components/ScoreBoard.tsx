@@ -27,7 +27,7 @@ interface ScoreBoardProps {
 }
 
 const ACTION_LABELS: { key: ActionType; label: string }[] = [
-  { key: 'other', label: 'Autre' },
+  { key: 'other', label: 'Out' },
   { key: 'service', label: 'Service' },
   { key: 'attack', label: 'Attaque loupée' },
   { key: 'block_out', label: 'Block Out' },
@@ -160,22 +160,24 @@ export function ScoreBoard({
         </button>
       </div>
 
-      {/* Action type */}
-      <div className="flex gap-1.5 justify-center flex-wrap">
-        {ACTION_LABELS.map(a => (
-          <button
-            key={a.key}
-            onClick={() => onSelectAction(a.key)}
-            className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
-              selectedAction === a.key
-                ? 'bg-accent text-accent-foreground ring-1 ring-primary'
-                : 'bg-secondary/60 text-muted-foreground hover:bg-secondary'
-            }`}
-          >
-            {a.label}
-          </button>
-        ))}
-      </div>
+      {/* Action type - only shown when Faute is selected */}
+      {selectedPointType === 'fault' && (
+        <div className="flex gap-1.5 justify-center flex-wrap">
+          {ACTION_LABELS.map(a => (
+            <button
+              key={a.key}
+              onClick={() => onSelectAction(a.key)}
+              className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
+                selectedAction === a.key
+                  ? 'bg-accent text-accent-foreground ring-1 ring-primary'
+                  : 'bg-secondary/60 text-muted-foreground hover:bg-secondary'
+              }`}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Team buttons */}
       <div className="flex gap-3">
