@@ -22,6 +22,7 @@ interface ScoreBoardProps {
   onPauseChrono: () => void;
   onSetTeamNames: (names: { blue: string; red: string }) => void;
   canUndo: boolean;
+  isFinished?: boolean;
 }
 
 function formatTime(seconds: number) {
@@ -51,6 +52,7 @@ export function ScoreBoard({
   sidesSwapped,
   chronoRunning,
   chronoSeconds,
+  isFinished = false,
 }: ScoreBoardProps) {
   const [editingNames, setEditingNames] = useState(false);
   const [nameInputs, setNameInputs] = useState(teamNames);
@@ -139,7 +141,7 @@ export function ScoreBoard({
           <p className={`text-5xl font-black tabular-nums ${left === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[left]}</p>
           <button
             onClick={() => openMenu(left)}
-            disabled={!!selectedTeam}
+            disabled={!!selectedTeam || isFinished}
             className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${
               left === 'blue'
                 ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
@@ -155,7 +157,7 @@ export function ScoreBoard({
           <p className={`text-5xl font-black tabular-nums ${right === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[right]}</p>
           <button
             onClick={() => openMenu(right)}
-            disabled={!!selectedTeam}
+            disabled={!!selectedTeam || isFinished}
             className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${
               right === 'blue'
                 ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
@@ -234,35 +236,41 @@ export function ScoreBoard({
       )}
 
       {/* Action buttons */}
-      <div className="flex gap-2 justify-center flex-wrap">
-        <button
-          onClick={onUndo}
-          disabled={!canUndo}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-30 transition-all"
-        >
-          <Undo2 size={16} /> Annuler
-        </button>
-        <button
-          onClick={onSwitchSides}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
-        >
-          <ArrowLeftRight size={16} /> Switch
-        </button>
-        <button
-          onClick={onEndSet}
-          disabled={!canUndo}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 disabled:opacity-30 transition-all"
-        >
-          <Flag size={16} /> Fin du Set
-        </button>
-        <button
-          onClick={onReset}
-          disabled={!canUndo}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-30 transition-all"
-        >
-          <RotateCcw size={16} /> Reset
-        </button>
-      </div>
+      {isFinished ? (
+        <div className="bg-muted/50 rounded-lg p-3 text-center">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">✅ Match terminé</p>
+        </div>
+      ) : (
+        <div className="flex gap-2 justify-center flex-wrap">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-30 transition-all"
+          >
+            <Undo2 size={16} /> Annuler
+          </button>
+          <button
+            onClick={onSwitchSides}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
+          >
+            <ArrowLeftRight size={16} /> Switch
+          </button>
+          <button
+            onClick={onEndSet}
+            disabled={!canUndo}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 disabled:opacity-30 transition-all"
+          >
+            <Flag size={16} /> Fin du Set
+          </button>
+          <button
+            onClick={onReset}
+            disabled={!canUndo}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-30 transition-all"
+          >
+            <RotateCcw size={16} /> Reset
+          </button>
+        </div>
+      )}
     </div>
   );
 }

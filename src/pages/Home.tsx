@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, History, Trash2, Eye, Play, Info } from 'lucide-react';
+import { Plus, History, Trash2, Eye, Play, Info, CheckCircle2 } from 'lucide-react';
 import logoCapbreton from '@/assets/logo-capbreton.jpeg';
 import { Input } from '@/components/ui/input';
-import { getAllMatches, createNewMatch, saveMatch, setActiveMatchId, deleteMatch } from '@/lib/matchStorage';
-import { MatchSummary } from '@/types/volleyball';
+import { getAllMatches, createNewMatch, saveMatch, setActiveMatchId, deleteMatch, getMatch } from '@/lib/matchStorage';
+import { MatchSummary, SetData, Team } from '@/types/volleyball';
 
 function formatDate(ts: number) {
   return new Date(ts).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -55,6 +55,32 @@ export default function Home() {
   const handleDelete = (id: string) => {
     deleteMatch(id);
     setMatches(getAllMatches().sort((a, b) => b.updatedAt - a.updatedAt));
+  };
+
+  const [finishingId, setFinishingId] = useState<string | null>(null);
+
+  const handleFinishMatch = (id: string) => {
+    const match = getMatch(id);
+    if (!match) return;
+    // End current set if there are points
+    if (match.points.length > 0) {
+      const blueScore = match.points.filter(p => p.team === 'blue').length;
+      const redScore = match.points.filter(p => p.team === 'red').length;
+      const winner: Team = blueScore >= redScore ? 'blue' : 'red';
+      const setData: SetData = {
+        id: crypto.randomUUID(),
+        number: match.currentSetNumber,
+        points: [...match.points],
+        score: { blue: blueScore, red: redScore },
+        winner,
+        duration: match.chronoSeconds,
+      };
+      match.completedSets.push(setData);
+      match.points = [];
+    }
+    saveMatch({ ...match, finished: true, updatedAt: Date.now() });
+    setMatches(getAllMatches().sort((a, b) => b.updatedAt - a.updatedAt));
+    setFinishingId(null);
   };
 
   const handleResume = (id: string) => {
@@ -163,6 +189,15 @@ export default function Home() {
                       >
                         {match.finished ? <><Eye size={14} /> Voir</> : <><Play size={14} /> Reprendre</>}
                       </button>
+                      {!match.finished && (
+                        <button
+                          onClick={() => setFinishingId(match.id)}
+                          className="px-3 py-2 rounded-lg bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all"
+                          title="Terminer le match"
+                        >
+                          <CheckCircle2 size={14} />
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDelete(match.id)}
                         className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all"
@@ -177,6 +212,32 @@ export default function Home() {
           )}
         </div>
       </main>
+
+      {/* Finish confirm modal */}
+      {finishingId && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setFinishingId(null)}>
+          <div className="bg-card rounded-2xl p-6 max-w-sm w-full border border-border space-y-4" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-foreground text-center">Terminer le match ?</h2>
+            <p className="text-sm text-muted-foreground text-center">
+              Le set en cours sera finalisé et le match sera marqué comme terminé. Cette action est irréversible.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setFinishingId(null)}
+                className="flex-1 py-2.5 rounded-lg bg-secondary text-secondary-foreground font-semibold text-sm"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => handleFinishMatch(finishingId)}
+                className="flex-1 py-2.5 rounded-lg bg-destructive text-destructive-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
+              >
+                <CheckCircle2 size={16} /> Terminer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="px-4 py-4 border-t border-border text-center">
         <p className="text-xs text-muted-foreground">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
-import { Activity, BarChart3, HelpCircle, X, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Activity, BarChart3, HelpCircle, X, ArrowLeft } from 'lucide-react';
 import { useMatchState } from '@/hooks/useMatchState';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
@@ -15,7 +15,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('match');
   const [showHelp, setShowHelp] = useState(false);
-  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  
 
   const matchState = useMatchState(matchId ?? '');
 
@@ -28,13 +28,11 @@ const Index = () => {
     score, stats, setsScore, currentSetNumber, completedSets,
     teamNames, sidesSwapped, chronoRunning, chronoSeconds,
     setTeamNames, selectAction, cancelSelection, addPoint, undo,
-    endSet, finishMatch, resetMatch, switchSides, startChrono, pauseChrono,
+    endSet, resetMatch, switchSides, startChrono, pauseChrono,
   } = matchState;
 
-  const handleFinish = () => {
-    finishMatch();
-    navigate('/');
-  };
+  const matchData = getMatch(matchId);
+  const isFinished = matchData?.finished ?? false;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -105,6 +103,7 @@ const Index = () => {
               onPauseChrono={pauseChrono}
               onSetTeamNames={setTeamNames}
               canUndo={points.length > 0}
+              isFinished={isFinished}
             />
             <VolleyballCourt
               points={points}
@@ -120,42 +119,7 @@ const Index = () => {
           <HeatmapView points={allPoints} completedSets={completedSets} currentSetPoints={points} currentSetNumber={currentSetNumber} stats={stats} teamNames={teamNames} />
         )}
 
-        {/* Finish match button */}
-        {tab === 'match' && (
-          <button
-            onClick={() => setShowFinishConfirm(true)}
-            className="flex items-center justify-center gap-1.5 px-4 py-2 mx-auto rounded-lg bg-destructive/10 text-destructive font-medium text-xs border border-destructive/15 hover:bg-destructive/20 transition-all"
-          >
-            <CheckCircle2 size={14} /> Terminer le match
-          </button>
-        )}
       </main>
-
-      {/* Finish confirm modal */}
-      {showFinishConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowFinishConfirm(false)}>
-          <div className="bg-card rounded-2xl p-6 max-w-sm w-full border border-border space-y-4 relative" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-foreground text-center">Terminer le match ?</h2>
-            <p className="text-sm text-muted-foreground text-center">
-              Le set en cours sera finalisé et le match sera marqué comme terminé. Cette action est irréversible.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowFinishConfirm(false)}
-                className="flex-1 py-2.5 rounded-lg bg-secondary text-secondary-foreground font-semibold text-sm"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleFinish}
-                className="flex-1 py-2.5 rounded-lg bg-destructive text-destructive-foreground font-semibold text-sm flex items-center justify-center gap-1.5"
-              >
-                <CheckCircle2 size={16} /> Terminer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Help modal */}
       {showHelp && (
