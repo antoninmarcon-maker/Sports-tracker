@@ -15,17 +15,27 @@ const Index = () => {
     allPoints,
     selectedTeam,
     selectedPointType,
+    selectedAction,
     score,
     stats,
     setsScore,
     currentSetNumber,
     completedSets,
+    teamNames,
+    sidesSwapped,
+    chronoRunning,
+    chronoSeconds,
     setSelectedTeam,
     setSelectedPointType,
+    setSelectedAction,
+    setTeamNames,
     addPoint,
     undo,
     endSet,
     resetMatch,
+    switchSides,
+    startChrono,
+    pauseChrono,
   } = useMatchState();
 
   return (
@@ -55,34 +65,47 @@ const Index = () => {
         </button>
       </nav>
 
-      <main className="flex-1 overflow-auto p-4 max-w-lg mx-auto w-full">
+      <main className="flex-1 overflow-auto p-4 max-w-2xl mx-auto w-full">
         {tab === 'match' ? (
           <div className="space-y-4">
             <SetHistory
               completedSets={completedSets}
               currentSetNumber={currentSetNumber}
               setsScore={setsScore}
+              teamNames={teamNames}
             />
             <ScoreBoard
               score={score}
               selectedTeam={selectedTeam}
               selectedPointType={selectedPointType}
+              selectedAction={selectedAction}
               currentSetNumber={currentSetNumber}
+              teamNames={teamNames}
+              sidesSwapped={sidesSwapped}
+              chronoRunning={chronoRunning}
+              chronoSeconds={chronoSeconds}
               onSelectTeam={setSelectedTeam}
               onSelectPointType={setSelectedPointType}
+              onSelectAction={setSelectedAction}
               onUndo={undo}
               onEndSet={endSet}
               onReset={resetMatch}
+              onSwitchSides={switchSides}
+              onStartChrono={startChrono}
+              onPauseChrono={pauseChrono}
+              onSetTeamNames={setTeamNames}
               canUndo={points.length > 0}
             />
             <VolleyballCourt
               points={points}
               selectedTeam={selectedTeam}
+              sidesSwapped={sidesSwapped}
+              teamNames={teamNames}
               onCourtClick={addPoint}
             />
           </div>
         ) : (
-          <HeatmapView points={allPoints} stats={stats} />
+          <HeatmapView points={allPoints} stats={stats} teamNames={teamNames} />
         )}
       </main>
     </div>

@@ -1,14 +1,21 @@
 import { SetData } from '@/types/volleyball';
-import { ChevronDown, ChevronUp, Trophy } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trophy, Clock } from 'lucide-react';
 import { useState } from 'react';
 
 interface SetHistoryProps {
   completedSets: SetData[];
   currentSetNumber: number;
   setsScore: { blue: number; red: number };
+  teamNames: { blue: string; red: string };
 }
 
-export function SetHistory({ completedSets, currentSetNumber, setsScore }: SetHistoryProps) {
+function formatDuration(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}min ${s.toString().padStart(2, '0')}s`;
+}
+
+export function SetHistory({ completedSets, currentSetNumber, setsScore, teamNames }: SetHistoryProps) {
   const [expandedSet, setExpandedSet] = useState<string | null>(null);
 
   if (completedSets.length === 0 && currentSetNumber === 1) return null;
@@ -39,6 +46,11 @@ export function SetHistory({ completedSets, currentSetNumber, setsScore }: SetHi
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-muted-foreground">SET {set.number}</span>
               <div className={`w-2 h-2 rounded-full ${set.winner === 'blue' ? 'bg-team-blue' : 'bg-team-red'}`} />
+              {set.duration > 0 && (
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <Clock size={10} /> {formatDuration(set.duration)}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <span className={`text-sm font-bold ${set.winner === 'blue' ? 'text-team-blue' : 'text-muted-foreground'}`}>
@@ -55,12 +67,12 @@ export function SetHistory({ completedSets, currentSetNumber, setsScore }: SetHi
             <div className="px-3 pb-3 border-t border-border pt-2">
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <p className="text-team-blue font-semibold mb-1">Bleue</p>
+                  <p className="text-team-blue font-semibold mb-1">{teamNames.blue}</p>
                   <p className="text-muted-foreground">Marqués: {set.points.filter(p => p.team === 'blue' && p.type === 'scored').length}</p>
                   <p className="text-muted-foreground">Fautes: {set.points.filter(p => p.team === 'blue' && p.type === 'fault').length}</p>
                 </div>
                 <div>
-                  <p className="text-team-red font-semibold mb-1">Rouge</p>
+                  <p className="text-team-red font-semibold mb-1">{teamNames.red}</p>
                   <p className="text-muted-foreground">Marqués: {set.points.filter(p => p.team === 'red' && p.type === 'scored').length}</p>
                   <p className="text-muted-foreground">Fautes: {set.points.filter(p => p.team === 'red' && p.type === 'fault').length}</p>
                 </div>
