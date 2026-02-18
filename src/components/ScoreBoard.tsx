@@ -1,4 +1,4 @@
-import { Undo2, RotateCcw, Flag, ArrowLeftRight, Play, Pause, Timer, Pencil, Plus, X } from 'lucide-react';
+import { Undo2, RotateCcw, Flag, ArrowLeftRight, Play, Pause, Timer, Pencil, Plus, X, ChevronDown } from 'lucide-react';
 import { Team, PointType, ActionType, OFFENSIVE_ACTIONS, FAULT_ACTIONS } from '@/types/volleyball';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
@@ -143,6 +143,11 @@ export function ScoreBoard({
         <div className="flex-1 text-center">
           <p className={`text-xs font-semibold uppercase tracking-widest ${left === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{teamNames[left]}</p>
           <p className={`text-5xl font-black tabular-nums ${left === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[left]}</p>
+          {menuTeam === left && (
+            <div className="flex justify-center mt-1">
+              <ChevronDown size={28} strokeWidth={3} className={`${left === 'blue' ? 'text-team-blue' : 'text-team-red'} opacity-60 animate-bounce`} />
+            </div>
+          )}
           <button
             onClick={() => openMenu(left)}
             disabled={!!selectedTeam || isFinished || waitingForNewSet}
@@ -159,6 +164,11 @@ export function ScoreBoard({
         <div className="flex-1 text-center">
           <p className={`text-xs font-semibold uppercase tracking-widest ${right === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{teamNames[right]}</p>
           <p className={`text-5xl font-black tabular-nums ${right === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[right]}</p>
+          {menuTeam === right && (
+            <div className="flex justify-center mt-1">
+              <ChevronDown size={28} strokeWidth={3} className={`${right === 'blue' ? 'text-team-blue' : 'text-team-red'} opacity-60 animate-bounce`} />
+            </div>
+          )}
           <button
             onClick={() => openMenu(right)}
             disabled={!!selectedTeam || isFinished || waitingForNewSet}
@@ -176,31 +186,27 @@ export function ScoreBoard({
       {/* Action selection menu */}
       {menuTeam && (
         <div className="bg-card rounded-xl border border-border p-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex items-center justify-between">
-            <p className={`text-sm font-bold ${menuTeam === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>
-              {teamNames[menuTeam]}
-            </p>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-2 flex-1">
+              <button
+                onClick={() => setMenuTab('scored')}
+                className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                  menuTab === 'scored' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                }`}
+              >
+                ⚡ Points Gagnés
+              </button>
+              <button
+                onClick={() => setMenuTab('fault')}
+                className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                  menuTab === 'fault' ? 'bg-destructive text-destructive-foreground' : 'bg-secondary text-secondary-foreground'
+                }`}
+              >
+                ❌ Fautes Adverses
+              </button>
+            </div>
             <button onClick={closeMenu} className="p-1 rounded-md text-muted-foreground hover:text-foreground">
               <X size={16} />
-            </button>
-          </div>
-          {/* Tabs */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setMenuTab('scored')}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                menuTab === 'scored' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-              }`}
-            >
-              ⚡ Points Gagnés
-            </button>
-            <button
-              onClick={() => setMenuTab('fault')}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                menuTab === 'fault' ? 'bg-destructive text-destructive-foreground' : 'bg-secondary text-secondary-foreground'
-              }`}
-            >
-              ❌ Fautes Adverses
             </button>
           </div>
           {/* Actions */}
