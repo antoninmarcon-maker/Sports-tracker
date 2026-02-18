@@ -69,8 +69,8 @@ function isZoneAllowed(
   // Faults: the OPPONENT committed the fault, so zones relate to opponent's side
   switch (action) {
     case 'service_miss':
-      // Opponent missed their serve from the back of THEIR court
-      return zone === (opponentSide === 'left' ? 'back_left' : 'back_right');
+      // Opponent served from BEHIND their baseline (outside court)
+      return zone === (opponentSide === 'left' ? 'outside_left' : 'outside_right');
     case 'out':
       // Ball went out around the SCORING team's court
       return zone === (teamSide === 'left' ? 'outside_left' : 'outside_right');
@@ -107,11 +107,15 @@ function getZoneHighlights(
 
   switch (action) {
     case 'service_miss': {
-      // Back of opponent's court (where they served from)
+      // Behind opponent's baseline (where they served from, outside the court)
       if (opponentSide === 'left') {
-        return { allowed: [{ x: COURT_LEFT, y: COURT_TOP, w: BACK_DEPTH, h: COURT_BOTTOM - COURT_TOP }] };
+        return { allowed: [
+          { x: 0, y: 0, w: COURT_LEFT, h: 400 },
+        ]};
       }
-      return { allowed: [{ x: COURT_RIGHT - BACK_DEPTH, y: COURT_TOP, w: BACK_DEPTH, h: COURT_BOTTOM - COURT_TOP }] };
+      return { allowed: [
+        { x: COURT_RIGHT, y: 0, w: 600 - COURT_RIGHT, h: 400 },
+      ]};
     }
     case 'out': {
       // Outside scoring team's court (ball went out on their side)
