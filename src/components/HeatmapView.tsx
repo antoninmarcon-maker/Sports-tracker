@@ -27,9 +27,10 @@ function escapeHtml(text: string): string {
 
 function computeStats(pts: Point[]) {
   const byTeam = (team: 'blue' | 'red') => {
-    const teamPts = pts.filter(p => p.team === team);
-    const scored = teamPts.filter(p => p.type === 'scored');
-    const faults = teamPts.filter(p => p.type === 'fault');
+    const opponent = team === 'blue' ? 'red' : 'blue';
+    const scored = pts.filter(p => p.team === team && p.type === 'scored');
+    // Faults committed BY this team = points scored by opponent via fault
+    const faults = pts.filter(p => p.team === opponent && p.type === 'fault');
     return {
       scored: scored.length,
       faults: faults.length,
@@ -264,7 +265,7 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
                 ))}
 
                 <div className="flex justify-between border-t border-border pt-1 mt-1">
-                  <span className="text-muted-foreground font-semibold text-xs">❌ Fautes</span>
+                  <span className="text-muted-foreground font-semibold text-xs">❌ Fautes commises</span>
                   <span className="font-bold text-destructive text-xs">{ds[team].faults}</span>
                 </div>
                 {[
