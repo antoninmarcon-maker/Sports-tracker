@@ -1,6 +1,32 @@
 export type Team = 'blue' | 'red';
 export type PointType = 'scored' | 'fault';
-export type ActionType = 'service' | 'attack' | 'block_out' | 'reception' | 'pass' | 'net_touch' | 'foot_fault' | 'rotation' | 'carry' | 'other';
+
+// Offensive actions (points gagnés)
+export type OffensiveAction = 'attack' | 'ace' | 'block' | 'bidouille' | 'seconde_main' | 'other_offensive';
+// Fault actions (fautes commises)
+export type FaultAction = 'out' | 'net_fault' | 'service_miss' | 'block_out';
+
+export type ActionType = OffensiveAction | FaultAction;
+
+export const OFFENSIVE_ACTIONS: { key: OffensiveAction; label: string }[] = [
+  { key: 'attack', label: 'Attaque' },
+  { key: 'ace', label: 'Ace' },
+  { key: 'block', label: 'Block' },
+  { key: 'bidouille', label: 'Bidouille' },
+  { key: 'seconde_main', label: 'Seconde main' },
+  { key: 'other_offensive', label: 'Autre' },
+];
+
+export const FAULT_ACTIONS: { key: FaultAction; label: string }[] = [
+  { key: 'out', label: 'Out' },
+  { key: 'net_fault', label: 'Filet' },
+  { key: 'service_miss', label: 'Service loupé' },
+  { key: 'block_out', label: 'Block Out' },
+];
+
+export function isOffensiveAction(action: ActionType): boolean {
+  return ['attack', 'ace', 'block', 'bidouille', 'seconde_main', 'other_offensive'].includes(action);
+}
 
 export interface Point {
   id: string;
@@ -40,3 +66,6 @@ export interface MatchSummary {
   updatedAt: number;
   finished: boolean;
 }
+
+// Zone constraint type for court clicking
+export type CourtZone = 'opponent_court' | 'outside_opponent' | 'net_line' | 'outside_own';

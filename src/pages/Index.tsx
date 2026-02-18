@@ -35,10 +35,9 @@ const Index = () => {
     sidesSwapped,
     chronoRunning,
     chronoSeconds,
-    setSelectedTeam,
-    setSelectedPointType,
-    setSelectedAction,
     setTeamNames,
+    selectAction,
+    cancelSelection,
     addPoint,
     undo,
     endSet,
@@ -101,16 +100,14 @@ const Index = () => {
             <ScoreBoard
               score={score}
               selectedTeam={selectedTeam}
-              selectedPointType={selectedPointType}
               selectedAction={selectedAction}
               currentSetNumber={currentSetNumber}
               teamNames={teamNames}
               sidesSwapped={sidesSwapped}
               chronoRunning={chronoRunning}
               chronoSeconds={chronoSeconds}
-              onSelectTeam={setSelectedTeam}
-              onSelectPointType={setSelectedPointType}
-              onSelectAction={setSelectedAction}
+              onSelectAction={selectAction}
+              onCancelSelection={cancelSelection}
               onUndo={undo}
               onEndSet={endSet}
               onReset={resetMatch}
@@ -123,6 +120,8 @@ const Index = () => {
             <VolleyballCourt
               points={points}
               selectedTeam={selectedTeam}
+              selectedAction={selectedAction}
+              selectedPointType={selectedPointType}
               sidesSwapped={sidesSwapped}
               teamNames={teamNames}
               onCourtClick={addPoint}
@@ -141,12 +140,12 @@ const Index = () => {
             </button>
             <h2 className="text-lg font-bold text-foreground">Comment utiliser l'app ?</h2>
             <div className="text-sm text-muted-foreground space-y-2">
-              <p><strong className="text-foreground">1. Choisir l'action</strong> : Sélectionnez le type d'action (Service, Attaque loupée, Block Out). Pour un point marqué simple, laissez sur "Autre".</p>
-              <p><strong className="text-foreground">2. Point ou Faute</strong> : "Point Marqué" est sélectionné par défaut. Les actions (Service, Attaque loupée, Block Out) passent automatiquement en "Faute".</p>
-              <p><strong className="text-foreground">3. Choisir l'équipe</strong> : Appuyez sur le bouton de l'équipe concernée.</p>
-              <p><strong className="text-foreground">4. Placer sur le terrain</strong> : Touchez l'endroit du terrain où l'action a eu lieu. Seuls les points marqués apparaissent sur le terrain.</p>
-              <p><strong className="text-foreground">5. Gestion des sets</strong> : Utilisez "Fin du Set" pour terminer un set et "Switch" pour inverser les côtés.</p>
-              <p><strong className="text-foreground">6. Statistiques</strong> : L'onglet Statistiques affiche les stats détaillées par set avec une heatmap des points marqués.</p>
+              <p><strong className="text-foreground">1. Appuyez sur "+"</strong> sous le score de l'équipe concernée.</p>
+              <p><strong className="text-foreground">2. Choisissez la catégorie</strong> : "Points Gagnés" ou "Fautes Commises".</p>
+              <p><strong className="text-foreground">3. Sélectionnez l'action</strong> : Attaque, Ace, Block, Out, Filet, etc.</p>
+              <p><strong className="text-foreground">4. Placez sur le terrain</strong> : Seule la zone autorisée est cliquable (le reste est grisé).</p>
+              <p><strong className="text-foreground">5. Gestion des sets</strong> : "Fin du Set" pour terminer, "Switch" pour inverser les côtés.</p>
+              <p><strong className="text-foreground">6. Statistiques</strong> : L'onglet Stats affiche le détail par set avec heatmap des actions offensives.</p>
             </div>
           </div>
         </div>
