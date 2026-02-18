@@ -110,12 +110,7 @@ const Index = () => {
               chronoSeconds={chronoSeconds}
               onSelectTeam={setSelectedTeam}
               onSelectPointType={setSelectedPointType}
-              onSelectAction={(action) => {
-                setSelectedAction(action);
-                if (action === 'service' || action === 'attack' || action === 'block_out') {
-                  setSelectedPointType('fault');
-                }
-              }}
+              onSelectAction={setSelectedAction}
               onUndo={undo}
               onEndSet={endSet}
               onReset={resetMatch}

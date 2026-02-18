@@ -1,6 +1,6 @@
 export type Team = 'blue' | 'red';
 export type PointType = 'scored' | 'fault';
-export type ActionType = 'service' | 'attack' | 'block_out' | 'other';
+export type ActionType = 'service' | 'attack' | 'block_out' | 'reception' | 'pass' | 'net_touch' | 'foot_fault' | 'rotation' | 'carry' | 'other';
 
 export interface Point {
   id: string;

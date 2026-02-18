@@ -26,11 +26,24 @@ interface ScoreBoardProps {
   canUndo: boolean;
 }
 
-const ACTION_LABELS: { key: ActionType; label: string }[] = [
-  { key: 'other', label: 'Out' },
+const SCORED_ACTIONS: { key: ActionType; label: string }[] = [
+  { key: 'other', label: 'Autre' },
   { key: 'service', label: 'Service' },
-  { key: 'attack', label: 'Attaque loupée' },
-  { key: 'block_out', label: 'Block Out' },
+  { key: 'attack', label: 'Attaque' },
+  { key: 'block_out', label: 'Block' },
+];
+
+const FAULT_ACTIONS: { key: ActionType; label: string }[] = [
+  { key: 'other', label: 'Autre' },
+  { key: 'service', label: 'Service' },
+  { key: 'attack', label: 'Attaque' },
+  { key: 'reception', label: 'Réception' },
+  { key: 'pass', label: 'Passe' },
+  { key: 'net_touch', label: 'Filet' },
+  { key: 'foot_fault', label: 'Pied' },
+  { key: 'block_out', label: 'Block' },
+  { key: 'rotation', label: 'Rotation' },
+  { key: 'carry', label: 'Portée' },
 ];
 
 function formatTime(seconds: number) {
@@ -160,24 +173,22 @@ export function ScoreBoard({
         </button>
       </div>
 
-      {/* Action type - only shown when Faute is selected */}
-      {selectedPointType === 'fault' && (
-        <div className="flex gap-1.5 justify-center flex-wrap">
-          {ACTION_LABELS.map(a => (
-            <button
-              key={a.key}
-              onClick={() => onSelectAction(a.key)}
-              className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
-                selectedAction === a.key
-                  ? 'bg-accent text-accent-foreground ring-1 ring-primary'
-                  : 'bg-secondary/60 text-muted-foreground hover:bg-secondary'
-              }`}
-            >
-              {a.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Action type */}
+      <div className="flex gap-1.5 justify-center flex-wrap">
+        {(selectedPointType === 'fault' ? FAULT_ACTIONS : SCORED_ACTIONS).map(a => (
+          <button
+            key={a.key}
+            onClick={() => onSelectAction(a.key)}
+            className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all ${
+              selectedAction === a.key
+                ? 'bg-accent text-accent-foreground ring-1 ring-primary'
+                : 'bg-secondary/60 text-muted-foreground hover:bg-secondary'
+            }`}
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
 
       {/* Team buttons */}
       <div className="flex gap-3">

@@ -19,23 +19,20 @@ interface HeatmapViewProps {
 type SetFilter = 'all' | number;
 
 function computeStats(pts: Point[]) {
-  return {
-    blue: {
-      scored: pts.filter(p => p.team === 'blue' && p.type === 'scored').length,
-      faults: pts.filter(p => p.team === 'blue' && p.type === 'fault').length,
-      services: pts.filter(p => p.team === 'blue' && p.action === 'service').length,
-      attacks: pts.filter(p => p.team === 'blue' && p.action === 'attack').length,
-      blocks: pts.filter(p => p.team === 'blue' && p.action === 'block_out').length,
-    },
-    red: {
-      scored: pts.filter(p => p.team === 'red' && p.type === 'scored').length,
-      faults: pts.filter(p => p.team === 'red' && p.type === 'fault').length,
-      services: pts.filter(p => p.team === 'red' && p.action === 'service').length,
-      attacks: pts.filter(p => p.team === 'red' && p.action === 'attack').length,
-      blocks: pts.filter(p => p.team === 'red' && p.action === 'block_out').length,
-    },
-    total: pts.length,
-  };
+  const byTeam = (team: 'blue' | 'red') => ({
+    scored: pts.filter(p => p.team === team && p.type === 'scored').length,
+    faults: pts.filter(p => p.team === team && p.type === 'fault').length,
+    services: pts.filter(p => p.team === team && p.action === 'service').length,
+    attacks: pts.filter(p => p.team === team && p.action === 'attack').length,
+    blocks: pts.filter(p => p.team === team && p.action === 'block_out').length,
+    receptions: pts.filter(p => p.team === team && p.action === 'reception').length,
+    passes: pts.filter(p => p.team === team && p.action === 'pass').length,
+    netTouches: pts.filter(p => p.team === team && p.action === 'net_touch').length,
+    footFaults: pts.filter(p => p.team === team && p.action === 'foot_fault').length,
+    rotations: pts.filter(p => p.team === team && p.action === 'rotation').length,
+    carries: pts.filter(p => p.team === team && p.action === 'carry').length,
+  });
+  return { blue: byTeam('blue'), red: byTeam('red'), total: pts.length };
 }
 
 export function HeatmapView({ points, completedSets, currentSetPoints, currentSetNumber, stats, teamNames }: HeatmapViewProps) {
@@ -191,8 +188,32 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
                   <span className="font-bold text-foreground">{ds[team].attacks}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Blocks Out</span>
+                  <span className="text-muted-foreground">Blocks</span>
                   <span className="font-bold text-foreground">{ds[team].blocks}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Réceptions</span>
+                  <span className="font-bold text-foreground">{ds[team].receptions}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Passes</span>
+                  <span className="font-bold text-foreground">{ds[team].passes}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Filets</span>
+                  <span className="font-bold text-foreground">{ds[team].netTouches}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Pieds</span>
+                  <span className="font-bold text-foreground">{ds[team].footFaults}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Rotations</span>
+                  <span className="font-bold text-foreground">{ds[team].rotations}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Portées</span>
+                  <span className="font-bold text-foreground">{ds[team].carries}</span>
                 </div>
                 <div className="flex justify-between border-t border-border pt-1 mt-1">
                   <span className="text-muted-foreground">Total</span>
