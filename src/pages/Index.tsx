@@ -1,16 +1,25 @@
 import { useState } from 'react';
-import { Activity, BarChart3, HelpCircle, X } from 'lucide-react';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { Activity, BarChart3, HelpCircle, X, ArrowLeft } from 'lucide-react';
 import { useMatchState } from '@/hooks/useMatchState';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { HeatmapView } from '@/components/HeatmapView';
 import { SetHistory } from '@/components/SetHistory';
+import { getMatch } from '@/lib/matchStorage';
 
 type Tab = 'match' | 'stats';
 
 const Index = () => {
+  const { matchId } = useParams<{ matchId: string }>();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('match');
   const [showHelp, setShowHelp] = useState(false);
+
+  if (!matchId || !getMatch(matchId)) {
+    return <Navigate to="/" replace />;
+  }
+
   const {
     points,
     allPoints,
@@ -37,22 +46,28 @@ const Index = () => {
     switchSides,
     startChrono,
     pauseChrono,
-  } = useMatchState();
+  } = useMatchState(matchId);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="px-4 py-3 border-b border-border flex items-center justify-center relative">
+      <header className="px-4 py-3 border-b border-border flex items-center justify-between">
+        <button
+          onClick={() => navigate('/')}
+          className="p-1.5 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft size={18} />
+        </button>
         <h1 className="text-lg font-black text-foreground tracking-tight text-center">
           🏐 Volley Tracker
         </h1>
-        {tab === 'match' && (
+        {tab === 'match' ? (
           <button
             onClick={() => setShowHelp(true)}
-            className="absolute right-4 p-1.5 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            className="p-1.5 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
           >
             <HelpCircle size={18} />
           </button>
-        )}
+        ) : <div className="w-[30px]" />}
       </header>
 
       <nav className="flex border-b border-border">

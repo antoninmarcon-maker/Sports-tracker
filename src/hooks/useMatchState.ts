@@ -1,47 +1,21 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Team, Point, PointType, ActionType, SetData } from '@/types/volleyball';
+import { getMatch, saveMatch } from '@/lib/matchStorage';
 
-const STORAGE_KEY = 'volley-tracker-match';
-
-interface SavedState {
-  completedSets: SetData[];
-  currentSetNumber: number;
-  points: Point[];
-  teamNames: { blue: string; red: string };
-  sidesSwapped: boolean;
-  chronoSeconds: number;
-}
-
-function loadState(): SavedState | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch { return null; }
-}
-
-function saveState(state: SavedState) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-}
-
-function clearSavedState() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch {}
-}
-
-export function useMatchState() {
-  const saved = useRef(loadState()).current;
-  const [completedSets, setCompletedSets] = useState<SetData[]>(saved?.completedSets ?? []);
-  const [currentSetNumber, setCurrentSetNumber] = useState(saved?.currentSetNumber ?? 1);
-  const [points, setPoints] = useState<Point[]>(saved?.points ?? []);
+export function useMatchState(matchId: string) {
+  const loaded = useRef(getMatch(matchId)).current;
+  const [completedSets, setCompletedSets] = useState<SetData[]>(loaded?.completedSets ?? []);
+  const [currentSetNumber, setCurrentSetNumber] = useState(loaded?.currentSetNumber ?? 1);
+  const [points, setPoints] = useState<Point[]>(loaded?.points ?? []);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [selectedPointType, setSelectedPointType] = useState<PointType>('scored');
   const [selectedAction, setSelectedAction] = useState<ActionType>('other');
-  const [teamNames, setTeamNames] = useState(saved?.teamNames ?? { blue: 'Bleue', red: 'Rouge' });
-  const [sidesSwapped, setSidesSwapped] = useState(saved?.sidesSwapped ?? false);
+  const [teamNames, setTeamNames] = useState(loaded?.teamNames ?? { blue: 'Bleue', red: 'Rouge' });
+  const [sidesSwapped, setSidesSwapped] = useState(loaded?.sidesSwapped ?? false);
 
   // Chrono
   const [chronoRunning, setChronoRunning] = useState(false);
-  const [chronoSeconds, setChronoSeconds] = useState(saved?.chronoSeconds ?? 0);
+  const [chronoSeconds, setChronoSeconds] = useState(loaded?.chronoSeconds ?? 0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -66,7 +40,6 @@ export function useMatchState() {
 
   const addPoint = useCallback((x: number, y: number) => {
     if (!selectedTeam) return;
-    // Auto-start chrono on first point
     if (!chronoRunning && points.length === 0) {
       setChronoRunning(true);
     }
@@ -148,13 +121,22 @@ export function useMatchState() {
     setSelectedTeam(null);
     setSidesSwapped(false);
     resetChrono();
-    clearSavedState();
   }, [resetChrono]);
 
-  // Auto-save to localStorage
+  // Auto-save to match storage
   useEffect(() => {
-    saveState({ completedSets, currentSetNumber, points, teamNames, sidesSwapped, chronoSeconds });
-  }, [completedSets, currentSetNumber, points, teamNames, sidesSwapped, chronoSeconds]);
+    if (!loaded) return;
+    saveMatch({
+      ...loaded,
+      completedSets,
+      currentSetNumber,
+      points,
+      teamNames,
+      sidesSwapped,
+      chronoSeconds,
+      updatedAt: Date.now(),
+    });
+  }, [completedSets, currentSetNumber, points, teamNames, sidesSwapped, chronoSeconds, loaded]);
 
   return {
     points,

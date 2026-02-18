@@ -27,3 +27,16 @@ export interface MatchState {
   selectedPointType: PointType;
   selectedAction: ActionType;
 }
+
+export interface MatchSummary {
+  id: string;
+  teamNames: { blue: string; red: string };
+  completedSets: SetData[];
+  currentSetNumber: number;
+  points: Point[];
+  sidesSwapped: boolean;
+  chronoSeconds: number;
+  createdAt: number;
+  updatedAt: number;
+  finished: boolean;
+}
