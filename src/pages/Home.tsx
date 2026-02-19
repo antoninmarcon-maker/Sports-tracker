@@ -26,14 +26,19 @@ function Instructions() {
         <h3 className="text-sm font-bold text-foreground">Comment ça marche ?</h3>
       </div>
       <div className="text-sm text-muted-foreground space-y-2">
-        <p><strong className="text-foreground">1. Créez un match</strong> en choisissant le sport (🏐 Volley ou 🏀 Basket) et nommez les deux équipes.</p>
-        <p><strong className="text-foreground">2. Définissez votre roster</strong> : ajoutez les joueurs (numéro + nom) pour suivre leurs stats individuelles.</p>
-        <p><strong className="text-foreground">3. Appuyez sur « + »</strong> sous le score de l'équipe qui marque.</p>
-        <p><strong className="text-foreground">4. Choisissez l'action</strong> adaptée au sport sélectionné.</p>
-        <p><strong className="text-foreground">5. Placez sur le terrain</strong> : la zone autorisée s'illumine. Cliquez puis sélectionnez le joueur concerné.</p>
-        <p><strong className="text-foreground">6. Gérez les périodes</strong> : « Fin du Set/Quart-temps » termine la période en cours.</p>
-        <p><strong className="text-foreground">7. Statistiques</strong> : consultez les stats par joueur et la heatmap des actions.</p>
-        <p><strong className="text-foreground">8. Exportez & Partagez</strong> : téléchargez stats PNG, terrain par set, Excel ou partagez le score.</p>
+        <p><strong className="text-foreground">1. Créez un match</strong> : appuyez sur « Nouveau Match », choisissez le sport (🏐 Volley ou 🏀 Basket) et nommez les deux équipes.</p>
+        <p><strong className="text-foreground">2. Définissez votre roster</strong> : ajoutez les joueurs (numéro + nom) de votre équipe pour suivre leurs stats individuelles.</p>
+        <p><strong className="text-foreground">3. Marquez un point</strong> : appuyez sur « + » sous le score de l'équipe qui marque, puis choisissez l'origine (point gagné ou faute adverse).</p>
+        <p><strong className="text-foreground">4. Actions adaptées au sport</strong> :</p>
+        <ul className="list-disc list-inside pl-2 space-y-1 text-xs">
+          <li><strong>🏐 Volley</strong> : Attaque, Ace, Block, Service loupé, Filet…</li>
+          <li><strong>🏀 Basket</strong> : Lancer franc (1pt), Tir intérieur (2pts), Tir à 3 points. Les zones du terrain s'adaptent.</li>
+        </ul>
+        <p><strong className="text-foreground">5. Logique de service (Volley)</strong> : l'équipe au service est indiquée par 🏐. L'« Ace » n'est disponible que pour l'équipe qui sert, et « Service loupé » uniquement pour l'adversaire.</p>
+        <p><strong className="text-foreground">6. Placez sur le terrain</strong> : la zone autorisée s'illumine. Cliquez puis sélectionnez le joueur concerné.</p>
+        <p><strong className="text-foreground">7. Gérez les périodes</strong> : « Fin du Set » (volley) ou « Fin du QT » (basket) termine la période en cours.</p>
+        <p><strong className="text-foreground">8. Stats & Terrain</strong> : consultez les stats par joueur. Sélectionnez un set/QT pour visualiser le terrain avec les points placés directement dans l'app.</p>
+        <p><strong className="text-foreground">9. Exportez & Partagez</strong> : téléchargez stats PNG, terrain par set, Excel adapté au sport ou partagez le score.</p>
       </div>
     </div>
   );
