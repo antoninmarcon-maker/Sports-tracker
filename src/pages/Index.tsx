@@ -12,6 +12,7 @@ import { PlayerSelector } from '@/components/PlayerSelector';
 import { AiAnalysis } from '@/components/AiAnalysis';
 import { AuthDialog } from '@/components/AuthDialog';
 import { getMatch, saveMatch } from '@/lib/matchStorage';
+import { getCloudMatchById } from '@/lib/cloudStorage';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { MatchSummary } from '@/types/sports';
@@ -40,16 +41,12 @@ const Index = () => {
         return;
       }
 
-      // Try fetching from cloud
+      // Try fetching from cloud using normalized tables
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data } = await supabase
-          .from('matches')
-          .select('match_data')
-          .eq('id', matchId)
-          .maybeSingle();
-        if (data?.match_data) {
-          saveMatch(data.match_data as unknown as MatchSummary);
+        const cloudMatch = await getCloudMatchById(matchId);
+        if (cloudMatch) {
+          saveMatch(cloudMatch);
           setMatchReady(true);
           setLoading(false);
           return;
