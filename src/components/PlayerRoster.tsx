@@ -19,7 +19,7 @@ export function PlayerRoster({ players, onSetPlayers, teamName, sport = 'volleyb
   const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [savedPlayers, setSavedPlayers] = useState<{ id: string; number: string; name: string }[]>([]);
+  const [savedPlayers, setSavedPlayers] = useState<{ id: string; name: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -64,7 +64,6 @@ export function PlayerRoster({ players, onSetPlayers, teamName, sport = 'volleyb
     if (!newName.trim()) return;
     const player: Player = {
       id: crypto.randomUUID(),
-      number: '',
       name: newName.trim(),
     };
     onSetPlayers([...players, player]);
@@ -73,11 +72,10 @@ export function PlayerRoster({ players, onSetPlayers, teamName, sport = 'volleyb
     setTimeout(() => nameRef.current?.focus(), 0);
   };
 
-  const selectSuggestion = (sp: { number: string; name: string }) => {
+  const selectSuggestion = (sp: { name: string }) => {
     setShowSuggestions(false);
     const player: Player = {
       id: crypto.randomUUID(),
-      number: '',
       name: sp.name,
     };
     onSetPlayers([...players, player]);
@@ -92,7 +90,6 @@ export function PlayerRoster({ players, onSetPlayers, teamName, sport = 'volleyb
     if (toAdd.length === 0) return;
     const newPlayers = toAdd.map(sp => ({
       id: crypto.randomUUID(),
-      number: '',
       name: sp.name,
     }));
     onSetPlayers([...players, ...newPlayers]);

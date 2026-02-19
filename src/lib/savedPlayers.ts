@@ -5,7 +5,6 @@ const SAVED_PLAYERS_KEY = 'volley-tracker-saved-players';
 
 interface SavedPlayer {
   id: string;
-  number: string;
   name: string;
   sport: SportType;
 }
@@ -40,7 +39,7 @@ function mergeLocalPlayers(sport: SportType, matchPlayers: Player[]) {
   if (newOnes.length > 0) {
     saveLocalSavedPlayers([
       ...existing,
-      ...newOnes.map(p => ({ id: crypto.randomUUID(), number: '', name: p.name, sport })),
+      ...newOnes.map(p => ({ id: crypto.randomUUID(), name: p.name, sport })),
     ]);
   }
 }
@@ -54,7 +53,7 @@ async function getCloudSavedPlayers(sport: SportType): Promise<SavedPlayer[]> {
     .eq('sport', sport)
     .order('name');
   if (error || !data) return [];
-  return data.map(r => ({ id: r.id, number: r.number, name: r.name, sport: r.sport as SportType }));
+  return data.map(r => ({ id: r.id, name: r.name, sport: r.sport as SportType }));
 }
 
 async function mergeCloudPlayers(userId: string, sport: SportType, matchPlayers: Player[]) {
@@ -66,7 +65,6 @@ async function mergeCloudPlayers(userId: string, sport: SportType, matchPlayers:
   const rows = newOnes.map(p => ({
     user_id: userId,
     sport,
-    number: '',
     name: p.name,
   }));
   await supabase.from('saved_players').insert(rows);

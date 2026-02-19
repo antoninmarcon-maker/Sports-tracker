@@ -14,7 +14,6 @@ interface SavedPlayersManagerProps {
 
 interface SavedPlayer {
   id: string;
-  number: string;
   name: string;
   sport: SportType;
 }

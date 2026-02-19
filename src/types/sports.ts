@@ -56,7 +56,6 @@ export function getBasketPointValue(action: ActionType): number {
 
 export interface Player {
   id: string;
-  number: string; // kept for backward compat, no longer used in UI
   name: string;
 }
 

@@ -9,7 +9,7 @@ const LAST_ROSTER_KEY = 'volley-tracker-last-roster';
 
 const PlayerSchema = z.object({
   id: z.string(),
-  number: z.string(),
+  number: z.string().optional(),
   name: z.string(),
 });
 
@@ -136,7 +136,7 @@ export function createNewMatch(teamNames: { blue: string; red: string }, sport: 
     points: [],
     sidesSwapped: false,
     chronoSeconds: 0,
-    players: lastRoster.map(p => ({ ...p, id: crypto.randomUUID(), number: '' })),
+    players: lastRoster.map(p => ({ ...p, id: crypto.randomUUID() })),
     createdAt: Date.now(),
     updatedAt: Date.now(),
     finished: false,

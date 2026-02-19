@@ -92,21 +92,18 @@ export type Database = {
           id: string
           match_id: string
           name: string
-          number: string
         }
         Insert: {
           created_at?: string
           id?: string
           match_id: string
           name?: string
-          number?: string
         }
         Update: {
           created_at?: string
           id?: string
           match_id?: string
           name?: string
-          number?: string
         }
         Relationships: [
           {
@@ -190,7 +187,6 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          number: string
           sport: string
           updated_at: string
           user_id: string
@@ -199,7 +195,6 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          number?: string
           sport?: string
           updated_at?: string
           user_id: string
@@ -208,7 +203,6 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          number?: string
           sport?: string
           updated_at?: string
           user_id?: string
