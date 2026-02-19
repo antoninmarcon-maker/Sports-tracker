@@ -1,73 +1,83 @@
-# Welcome to your Lovable project
+# 🏐 Netpoint Tracker
 
-## Project info
+**Application de scouting et de statistiques sportives pour le volleyball et le basketball.**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+> Conçue pour les clubs amateurs qui veulent des outils de niveau professionnel.
 
-## How can I edit this code?
+[![Live App](https://img.shields.io/badge/Live-netpoint--tracker.lovable.app-blue)](https://netpoint-tracker.lovable.app)
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## 🎯 Features for Coaches & Scouts
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Netpoint Tracker is designed to bridge the gap between amateur recording and professional scouting:
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Multi-Sport Logic**: Specialized scoring for Volleyball (sets, rotations, service tracking) and Basketball (1, 2, 3 points zones).
+- **Visual Scouting**: Clickable court interface to record exact ball impact locations.
+- **Player-Specific Data**: Attribute every action (Ace, Attack, Block, Fault) to a specific roster member.
+- **Tactical Heatmaps**: Built-in visual analytics to identify weak zones and opponent patterns.
+- **Professional Exports**: Generate multi-sheet Excel reports for post-match debriefing.
+- **AI-Powered Analysis**: Get tactical insights and performance summaries powered by AI.
+- **Cloud Sync**: Matches sync to the cloud when logged in. Works offline as a PWA.
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 📊 Fonctionnalités détaillées
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Volleyball
+- Comptage des points avec suivi du service
+- Actions : Ace, Attaque, Block, Bidouille, Seconde main
+- Fautes : Out, Filet, Service loupé, Block Out
+- Gestion des sets avec inversion automatique des côtés
 
-Follow these steps:
+### Basketball
+- Gestion des paniers à 1 (lancer franc), 2 et 3 points selon la zone du terrain
+- Suivi des tirs manqués, pertes de balle et fautes commises
+- Gestion des quart-temps
+
+### Analyse & Export
+- Statistiques individuelles par joueur avec efficacité
+- Heatmap interactive des zones d'impact
+- Export PNG des statistiques et du terrain
+- Export Excel structuré avec un onglet par set/QT et résumé global
+- Partage du score via WhatsApp, Telegram, X
+
+### Technologie
+- **PWA** (Progressive Web App) fonctionnant sans connexion après installation
+- Authentification Google, Apple et email/mot de passe
+- Synchronisation cloud des matchs entre appareils
+- Analyse IA des performances (nécessite connexion)
+
+---
+
+## 🛠 Stack technique
+
+- [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vitejs.dev/) + [vite-plugin-pwa](https://vite-pwa-org.netlify.app/)
+- [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)
+- [Supabase](https://supabase.com/) (Auth, Database, Edge Functions)
+- [Lovable AI Gateway](https://docs.lovable.dev/features/ai) (Analyse tactique)
+
+---
+
+## 🚀 Getting Started
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd netpoint-tracker
 
-# Step 3: Install the necessary dependencies.
+# Install dependencies
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📄 License
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Made with ❤️ by [Volleyball Capbreton](https://netpoint-tracker.lovable.app)

@@ -1,32 +1,59 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="My Volley" />
+    <meta name="apple-mobile-web-app-title" content="Netpoint Tracker" />
     <meta name="theme-color" content="#0f172a" />
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>My Volley</title>
-    <meta name="description" content="Suivi de matchs de volley-ball">
-    <meta name="author" content="Lovable" />
+    <link rel="canonical" href="https://netpoint-tracker.lovable.app/" />
 
-    <!-- TODO: Update og:title to match your application name -->
-    
-    
+    <title>Netpoint Tracker | Scouting Volley & Basket - Stats et Heatmaps</title>
+    <meta name="description" content="Application gratuite de scouting pour volley et basket amateur. Comptez les points, générez des heatmaps et exportez vos statistiques sur Excel. Idéal sur tablette.">
+    <meta name="keywords" content="scouting volley-ball gratuit, statistiques basket amateur, logiciel comptage points volleyball, heatmap volley, export excel statistiques sport">
+    <meta name="author" content="Volleyball Capbreton" />
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/95a12867-ac2f-4c00-a191-ff648a4b3e84?Expires=1771420247&amp;GoogleAccessId=go-api-on-aws%40gpt-engineer-390607.iam.gserviceaccount.com&amp;Signature=n6QSlNlGCKJa3PtcBRsxHCnAF3L%2FjNRAithE%2FG1D%2FkHmpFq509vBYYY%2Fs2SWY4zk9EJidoIxqmi%2B2NX%2F5rVHVDd3uKCP8mFkO9HhBfV1L%2BJUvRDk1y%2B3AUIufY1quJt%2FKUFUWsxDUNelpWxxgxsArG%2FsK0gdwEZtqNIZyKwmRJ0UwcKxIih%2Bfd1xwjdiX%2F4fIdftabuQ4M7iipxXz5hywSwwsM%2Bgni2cjNgBPxVbIiKgrINPpaScgagxM4hFnpYpwyrK%2BvToHYKZEjHeh0h8LKYFGKOrC9B002Z2Zsv%2BAwHpizVsn9a%2BPeWI7Clcp3ZlzZi5wUBMpfdtUUki%2BYjX%2Fg%3D%3D">
+    <meta property="og:title" content="Netpoint Tracker - L'outil de scouting pro pour clubs amateurs">
+    <meta property="og:description" content="Suivez vos matchs de volley et basket, analysez les performances par joueur et générez des rapports Excel instantanés.">
+    <meta property="og:image" content="/pwa-512x512.png">
+    <meta property="og:url" content="https://netpoint-tracker.lovable.app/">
+    <meta property="og:locale" content="fr_FR">
 
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/95a12867-ac2f-4c00-a191-ff648a4b3e84?Expires=1771420247&amp;GoogleAccessId=go-api-on-aws%40gpt-engineer-390607.iam.gserviceaccount.com&amp;Signature=n6QSlNlGCKJa3PtcBRsxHCnAF3L%2FjNRAithE%2FG1D%2FkHmpFq509vBYYY%2Fs2SWY4zk9EJidoIxqmi%2B2NX%2F5rVHVDd3uKCP8mFkO9HhBfV1L%2BJUvRDk1y%2B3AUIufY1quJt%2FKUFUWsxDUNelpWxxgxsArG%2FsK0gdwEZtqNIZyKwmRJ0UwcKxIih%2Bfd1xwjdiX%2F4fIdftabuQ4M7iipxXz5hywSwwsM%2Bgni2cjNgBPxVbIiKgrINPpaScgagxM4hFnpYpwyrK%2BvToHYKZEjHeh0h8LKYFGKOrC9B002Z2Zsv%2BAwHpizVsn9a%2BPeWI7Clcp3ZlzZi5wUBMpfdtUUki%2BYjX%2Fg%3D%3D">
-    <meta property="og:title" content="My Volley">
-  <meta name="twitter:title" content="My Volley">
-  <meta property="og:description" content="Suivi de matchs de volley-ball">
-  <meta name="twitter:description" content="Suivi de matchs de volley-ball">
-</head>
+    <meta name="twitter:title" content="Netpoint Tracker - Scouting Volley & Basket">
+    <meta name="twitter:description" content="Suivez vos matchs de volley et basket, analysez les performances par joueur et générez des rapports Excel instantanés.">
+    <meta name="twitter:image" content="/pwa-512x512.png">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Netpoint Tracker",
+      "operatingSystem": "Web, Android, iOS",
+      "applicationCategory": "SportsApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "description": "Logiciel de scouting et de statistiques pour le volleyball et le basketball. Permet le suivi en temps réel, la génération de heatmaps et l'analyse de performance par joueur.",
+      "featureList": [
+        "Comptage de points en temps réel",
+        "Heatmap des zones d'impact et de fautes",
+        "Statistiques individuelles par joueur",
+        "Export Excel (XLSX) set par set",
+        "Mode Progressif Web App (PWA) pour usage hors-ligne",
+        "Analyse tactique assistée par IA"
+      ]
+    }
+    </script>
+  </head>
 
   <body>
     <div id="root"></div>
