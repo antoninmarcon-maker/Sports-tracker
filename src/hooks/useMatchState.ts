@@ -75,8 +75,8 @@ export function useMatchState(matchId: string, ready: boolean = true) {
       timestamp: Date.now(),
       pointValue,
     };
-    // Show player selector only for blue (home) team actions
-    if (players.length > 0 && point.team === 'blue') {
+    // Show player selector for blue team actions + red team fault points (blue committed the fault)
+    if (players.length > 0 && (point.team === 'blue' || (point.team === 'red' && point.type === 'fault'))) {
       setPendingPoint(point);
     } else {
       setPoints(prev => [...prev, point]);
