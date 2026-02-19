@@ -164,10 +164,14 @@ const Index = () => {
             players={players}
             prompt={
               pendingPoint.team === 'blue' && pendingPoint.type === 'scored'
-                ? 'Quel joueur a réalisé l\'action ?'
+                ? 'Quel joueur a marqué ?'
+                : pendingPoint.team === 'blue' && pendingPoint.type === 'fault'
+                ? 'Quel joueur adverse a marqué contre nous ?'
                 : pendingPoint.team === 'red' && pendingPoint.type === 'fault'
-                ? 'Quel joueur a fait la faute ?'
-                : 'Quel joueur était responsable ?'
+                ? 'Quel joueur a commis la faute ?'
+                : pendingPoint.team === 'red' && pendingPoint.type === 'scored'
+                ? 'Quel joueur était responsable ?'
+                : 'Quel joueur ?'
             }
             onSelect={assignPlayer}
             onSkip={skipPlayerAssignment}

@@ -71,9 +71,8 @@ export function useMatchState(matchId: string) {
       timestamp: Date.now(),
       pointValue,
     };
-    // Show player selector for blue team actions
-    const isBlueAction = (point.team === 'blue' && point.type === 'scored') || (point.team === 'red' && point.type === 'fault');
-    if (players.length > 0 && isBlueAction) {
+    // Show player selector for all actions when roster is defined
+    if (players.length > 0) {
       setPendingPoint(point);
     } else {
       setPoints(prev => [...prev, point]);
@@ -99,8 +98,7 @@ export function useMatchState(matchId: string) {
       timestamp: Date.now(),
       pointValue: 1,
     };
-    const isBlueAction = (point.team === 'blue' && point.type === 'scored') || (point.team === 'red' && point.type === 'fault');
-    if (players.length > 0 && isBlueAction) {
+    if (players.length > 0) {
       setPendingPoint(point);
     } else {
       setPoints(prev => [...prev, point]);

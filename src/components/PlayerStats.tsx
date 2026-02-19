@@ -15,12 +15,13 @@ export function PlayerStats({ points, players, teamName }: PlayerStatsProps) {
     return players.map(player => {
       const playerPoints = points.filter(p => p.playerId === player.id);
       const scored = playerPoints.filter(p => p.team === 'blue' && p.type === 'scored');
-      const faults = playerPoints.filter(p => p.team === 'red');
       const faultWins = playerPoints.filter(p => p.team === 'blue' && p.type === 'fault');
+      // Negative: opponent scored attributed to this player, or this player's own faults
+      const negatives = playerPoints.filter(p => p.team === 'red');
 
-      const faultCount = faults.length;
+      const negativeCount = negatives.length;
       const scoredCount = scored.length + faultWins.length;
-      const total = scoredCount + faultCount;
+      const total = scoredCount + negativeCount;
       const efficiency = total > 0 ? (scoredCount / total * 100) : 0;
 
       // Breakdown for scored
@@ -29,22 +30,22 @@ export function PlayerStats({ points, players, teamName }: PlayerStatsProps) {
         count: scored.filter(p => p.action === a.key).length,
       })).filter(b => b.count > 0);
 
-      // Breakdown for faults (opponent actions that this player was responsible for)
+      // Breakdown for negatives
       const faultBreakdown = [
         ...OFFENSIVE_ACTIONS.map(a => ({
           label: a.label,
-          count: faults.filter(p => p.type === 'scored' && p.action === a.key).length,
+          count: negatives.filter(p => p.type === 'scored' && p.action === a.key).length,
         })),
         ...FAULT_ACTIONS.map(a => ({
           label: a.label,
-          count: faults.filter(p => p.type === 'fault' && p.action === a.key).length,
+          count: negatives.filter(p => p.type === 'fault' && p.action === a.key).length,
         })),
       ].filter(b => b.count > 0);
 
       return {
         player,
         scored: scoredCount,
-        faults: faultCount,
+        faults: negativeCount,
         total,
         efficiency,
         scoredBreakdown,
