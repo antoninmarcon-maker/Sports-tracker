@@ -1,11 +1,13 @@
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { Download, ChevronDown, Copy, Image, FileSpreadsheet, Map, Share2 } from 'lucide-react';
+import { Download, ChevronDown, Copy, Image, FileSpreadsheet, Map, Share2, Link as LinkIcon } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { Point, SetData, Player, isOffensiveAction, isBasketScoredAction, SportType, OFFENSIVE_ACTIONS, FAULT_ACTIONS, BASKET_SCORED_ACTIONS, BASKET_FAULT_ACTIONS } from '@/types/volleyball';
 import { PointTimeline } from './PointTimeline';
 import { CourtDisplay } from './CourtDisplay';
 import { PlayerStats } from './PlayerStats';
 import { exportMatchToExcel } from '@/lib/excelExport';
+import { generateShareToken } from '@/lib/cloudStorage';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +29,8 @@ interface HeatmapViewProps {
   teamNames: { blue: string; red: string };
   players?: Player[];
   sport?: SportType;
+  matchId?: string;
+  isLoggedIn?: boolean;
 }
 
 type SetFilter = 'all' | number;
@@ -144,7 +148,7 @@ function computeStats(pts: Point[], sport: SportType = 'volleyball'): { blue: Te
   return { blue: byTeam('blue'), red: byTeam('red'), total: pts.length, sport };
 }
 
-export function HeatmapView({ points, completedSets, currentSetPoints, currentSetNumber, stats, teamNames, players = [], sport = 'volleyball' }: HeatmapViewProps) {
+export function HeatmapView({ points, completedSets, currentSetPoints, currentSetNumber, stats, teamNames, players = [], sport = 'volleyball', matchId, isLoggedIn }: HeatmapViewProps) {
   const isBasketball = sport === 'basketball';
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [setFilter_, setSetFilter] = useState<SetFilter>('all');
@@ -334,6 +338,24 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
       copyScoreText();
     }
   }, [getScoreText, copyScoreText]);
+
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const shareMatchLink = useCallback(async () => {
+    if (!matchId || !isLoggedIn) {
+      toast.error('Connectez-vous pour générer un lien de partage');
+      return;
+    }
+    setGeneratingLink(true);
+    try {
+      const token = await generateShareToken(matchId);
+      if (!token) { toast.error('Erreur lors de la génération du lien'); return; }
+      const url = `${window.location.origin}/shared/${token}`;
+      await navigator.clipboard.writeText(url);
+      toast.success('Lien copié dans le presse-papier !');
+    } finally {
+      setGeneratingLink(false);
+    }
+  }, [matchId, isLoggedIn]);
 
   const filteredPoints = useMemo(() => {
     if (setFilter_ === 'all') return points;
@@ -652,6 +674,15 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
               <Copy size={14} className="mr-2" />
               Copier le score
             </DropdownMenuItem>
+            {matchId && isLoggedIn && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={shareMatchLink} disabled={generatingLink} className="cursor-pointer">
+                  <LinkIcon size={14} className="mr-2" />
+                  {generatingLink ? 'Génération...' : '🔗 Lien de partage'}
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

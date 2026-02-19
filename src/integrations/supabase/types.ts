@@ -20,6 +20,7 @@ export type Database = {
           finished: boolean
           id: string
           match_data: Json
+          share_token: string | null
           sport: string
           updated_at: string
           user_id: string
@@ -29,6 +30,7 @@ export type Database = {
           finished?: boolean
           id?: string
           match_data: Json
+          share_token?: string | null
           sport?: string
           updated_at?: string
           user_id: string
@@ -38,6 +40,7 @@ export type Database = {
           finished?: boolean
           id?: string
           match_data?: Json
+          share_token?: string | null
           sport?: string
           updated_at?: string
           user_id?: string

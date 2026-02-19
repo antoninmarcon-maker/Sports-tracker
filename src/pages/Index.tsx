@@ -180,7 +180,7 @@ const Index = () => {
                 onLoginRequired={() => setShowAuthForAi(true)}
               />
             </div>
-            <HeatmapView points={allPoints} completedSets={completedSets} currentSetPoints={points} currentSetNumber={currentSetNumber} stats={stats} teamNames={teamNames} players={players} sport={sport} />
+            <HeatmapView points={allPoints} completedSets={completedSets} currentSetPoints={points} currentSetNumber={currentSetNumber} stats={stats} teamNames={teamNames} players={players} sport={sport} matchId={matchId} isLoggedIn={!!user} />
           </div>
         )}
 

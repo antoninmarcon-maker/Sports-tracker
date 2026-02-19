@@ -66,3 +66,40 @@ export async function deleteCloudMatch(matchId: string) {
 
   if (error) console.error('Cloud delete error:', error);
 }
+
+// Generate or retrieve a share token for a match
+export async function generateShareToken(matchId: string): Promise<string | null> {
+  // Check if token already exists
+  const { data: existing } = await supabase
+    .from('matches')
+    .select('share_token')
+    .eq('id', matchId)
+    .maybeSingle();
+
+  if (existing?.share_token) return existing.share_token;
+
+  // Generate new token
+  const token = crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+  const { error } = await supabase
+    .from('matches')
+    .update({ share_token: token } as any)
+    .eq('id', matchId);
+
+  if (error) {
+    console.error('Share token error:', error);
+    return null;
+  }
+  return token;
+}
+
+// Get match data by share token (public, no auth needed)
+export async function getMatchByShareToken(token: string): Promise<MatchSummary | null> {
+  const { data, error } = await supabase
+    .from('matches')
+    .select('match_data')
+    .eq('share_token', token)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data.match_data as unknown as MatchSummary;
+}
