@@ -191,7 +191,7 @@ export function ScoreBoard({
               <button
                 onClick={() => setMenuTab('scored')}
                 className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                  menuTab === 'scored' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                  menuTab === 'scored' ? 'bg-action-scored text-action-scored-foreground' : 'bg-secondary text-secondary-foreground'
                 }`}
               >
                 ⚡ Points Gagnés
@@ -199,7 +199,7 @@ export function ScoreBoard({
               <button
                 onClick={() => setMenuTab('fault')}
                 className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                  menuTab === 'fault' ? 'bg-destructive text-destructive-foreground' : 'bg-secondary text-secondary-foreground'
+                  menuTab === 'fault' ? 'bg-action-fault text-action-fault-foreground' : 'bg-secondary text-secondary-foreground'
                 }`}
               >
                 ❌ Fautes Adverses
@@ -217,8 +217,8 @@ export function ScoreBoard({
                 onClick={() => handleActionSelect(a.key)}
                 className={`py-2.5 px-2 text-xs font-semibold rounded-lg transition-all active:scale-95 ${
                   menuTab === 'scored'
-                    ? 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
-                    : 'bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20'
+                    ? 'bg-action-scored/10 text-action-scored hover:bg-action-scored/20 border border-action-scored/20'
+                    : 'bg-action-fault/10 text-action-fault hover:bg-action-fault/20 border border-action-fault/20'
                 }`}
               >
                 {a.label}

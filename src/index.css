@@ -42,6 +42,11 @@
     --team-red-foreground: 0 0% 100%;
     --team-red-glow: 0 84% 60% / 0.3;
 
+    --action-scored: 152 69% 45%;
+    --action-scored-foreground: 0 0% 100%;
+    --action-fault: 32 95% 55%;
+    --action-fault-foreground: 0 0% 100%;
+
     --court: 142 50% 35%;
     --court-line: 0 0% 100%;
     --court-bg: 142 40% 28%;

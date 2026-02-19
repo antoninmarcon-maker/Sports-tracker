@@ -60,6 +60,14 @@ export default {
           line: "hsl(var(--court-line))",
           bg: "hsl(var(--court-bg))",
         },
+        "action-scored": {
+          DEFAULT: "hsl(var(--action-scored))",
+          foreground: "hsl(var(--action-scored-foreground))",
+        },
+        "action-fault": {
+          DEFAULT: "hsl(var(--action-fault))",
+          foreground: "hsl(var(--action-fault-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
