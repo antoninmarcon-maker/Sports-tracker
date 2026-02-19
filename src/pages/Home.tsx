@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, History, Trash2, Eye, Play, Info, CheckCircle2, LogIn } from 'lucide-react';
+import { Plus, History, Trash2, Eye, Play, Info, CheckCircle2, LogIn, HelpCircle, Loader2, X } from 'lucide-react';
 import logoCapbreton from '@/assets/logo-capbreton.jpeg';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -25,27 +25,30 @@ function matchScore(match: MatchSummary) {
   return { blue, red };
 }
 
-function Instructions() {
+function Instructions({ onClose }: { onClose?: () => void }) {
   return (
-    <div className="bg-card rounded-xl p-5 border border-border space-y-3">
+    <div className="bg-card rounded-xl p-5 border border-border space-y-3 relative">
+      {onClose && (
+        <button onClick={onClose} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
+          <X size={16} />
+        </button>
+      )}
       <div className="flex items-center gap-2">
         <Info size={16} className="text-primary" />
         <h3 className="text-sm font-bold text-foreground">Comment ça marche ?</h3>
       </div>
       <div className="text-sm text-muted-foreground space-y-2">
-        <p><strong className="text-foreground">1. Créez un match</strong> : appuyez sur « Nouveau Match », choisissez le sport (🏐 Volley ou 🏀 Basket) et nommez les deux équipes.</p>
-        <p><strong className="text-foreground">2. Définissez votre roster</strong> : ajoutez les joueurs (numéro + nom) de votre équipe pour suivre leurs stats individuelles.</p>
-        <p><strong className="text-foreground">3. Marquez un point</strong> : appuyez sur « + » sous le score de l'équipe qui marque, puis choisissez l'origine (point gagné ou faute adverse).</p>
-        <p><strong className="text-foreground">4. Actions adaptées au sport</strong> :</p>
+        <p><strong className="text-foreground">1. Créez un match</strong> : appuyez sur « Nouveau Match », choisissez le sport (🏐 Volley ou 🏀 Basket) et nommez les équipes.</p>
+        <p><strong className="text-foreground">2. Roster</strong> : ajoutez vos joueurs (numéro + nom). Ils sont sauvegardés automatiquement pour les prochains matchs.</p>
+        <p><strong className="text-foreground">3. Marquez les points</strong> : « + » sous le score → choisissez l'action → placez sur le terrain → sélectionnez le joueur.</p>
+        <p><strong className="text-foreground">4. Actions par sport</strong> :</p>
         <ul className="list-disc list-inside pl-2 space-y-1 text-xs">
-          <li><strong>🏐 Volley</strong> : Attaque, Ace, Block, Service loupé, Filet…</li>
-          <li><strong>🏀 Basket</strong> : Lancer franc (1pt), Tir intérieur (2pts), Tir à 3 points. Les zones du terrain s'adaptent.</li>
+          <li><strong>🏐 Volley</strong> : Attaque, Ace, Block, Bidouille, Seconde main, Service loupé, Filet, Out…</li>
+          <li><strong>🏀 Basket</strong> : Lancer franc (1pt), Tir intérieur (2pts), Tir à 3pts. Zones adaptées sur le terrain.</li>
         </ul>
-        <p><strong className="text-foreground">5. Logique de service (Volley)</strong> : l'équipe au service est indiquée par 🏐. L'« Ace » n'est disponible que pour l'équipe qui sert, et « Service loupé » uniquement pour l'adversaire.</p>
-        <p><strong className="text-foreground">6. Placez sur le terrain</strong> : la zone autorisée s'illumine. Cliquez puis sélectionnez le joueur concerné.</p>
-        <p><strong className="text-foreground">7. Gérez les périodes</strong> : « Fin du Set » (volley) ou « Fin du QT » (basket) termine la période en cours.</p>
-        <p><strong className="text-foreground">8. Stats & Terrain</strong> : consultez les stats par joueur. Sélectionnez un set/QT pour visualiser le terrain avec les points placés directement dans l'app.</p>
-        <p><strong className="text-foreground">9. Exportez & Partagez</strong> : téléchargez stats PNG, terrain par set, Excel adapté au sport ou partagez le score.</p>
+        <p><strong className="text-foreground">5. Périodes</strong> : « Fin du Set » / « Fin du QT » pour passer à la suite. Les côtés s'inversent automatiquement en volley.</p>
+        <p><strong className="text-foreground">6. Stats & Heatmap</strong> : onglet Statistiques pour les stats par joueur, la heatmap et l'analyse IA.</p>
+        <p><strong className="text-foreground">7. Exportez</strong> : stats en PNG, terrain par set, Excel complet ou partage via un lien.</p>
       </div>
     </div>
   );
@@ -57,14 +60,17 @@ export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
   const [guestDismissed, setGuestDismissed] = useState(() => sessionStorage.getItem('guestDismissed') === 'true');
   const [matches, setMatches] = useState<MatchSummary[]>([]);
+  const [loadingMatches, setLoadingMatches] = useState(true);
   const [showNew, setShowNew] = useState(false);
   const [names, setNames] = useState({ blue: '', red: '' });
   const [selectedSport, setSelectedSport] = useState<SportType>('volleyball');
   const [finishingId, setFinishingId] = useState<string | null>(null);
   const [showSavedPlayers, setShowSavedPlayers] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Load matches based on auth state
   const loadMatches = useCallback(async (currentUser: User | null) => {
+    setLoadingMatches(true);
     let all: MatchSummary[];
     if (currentUser) {
       all = await getCloudMatches();
@@ -74,6 +80,7 @@ export default function Home() {
     const active = all.filter(m => !m.finished).sort((a, b) => b.updatedAt - a.updatedAt);
     const finished = all.filter(m => m.finished).sort((a, b) => b.updatedAt - a.updatedAt);
     setMatches([...active, ...finished]);
+    setLoadingMatches(false);
   }, []);
 
   useEffect(() => {
@@ -200,6 +207,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="px-4 py-6 border-b border-border flex flex-col items-center gap-3 relative">
+        {/* Help button */}
+        <div className="absolute top-4 left-4">
+          <button
+            onClick={() => setShowHelp(true)}
+            className="p-1.5 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            title="Aide"
+          >
+            <HelpCircle size={18} />
+          </button>
+        </div>
         {/* Auth button */}
         <div className="absolute top-4 right-4">
           {user ? (
@@ -227,6 +244,15 @@ export default function Home() {
         onOpenChange={setShowAuth}
         onGuest={() => { setGuestDismissed(true); sessionStorage.setItem('guestDismissed', 'true'); }}
       />
+
+      {/* Help dialog */}
+      {showHelp && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowHelp(false)}>
+          <div className="max-w-sm w-full max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
+            <Instructions onClose={() => setShowHelp(false)} />
+          </div>
+        </div>
+      )}
 
       <main className="flex-1 overflow-auto p-4 max-w-lg mx-auto w-full space-y-6">
         <PwaInstallBanner />
@@ -319,7 +345,12 @@ export default function Home() {
             <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Matchs précédents</h2>
           </div>
 
-          {matches.length === 0 ? (
+          {loadingMatches ? (
+            <div className="flex items-center justify-center gap-2 py-8">
+              <Loader2 size={18} className="animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">Chargement des matchs…</span>
+            </div>
+          ) : matches.length === 0 ? (
             <Instructions />
           ) : (
             <div className="space-y-2">
