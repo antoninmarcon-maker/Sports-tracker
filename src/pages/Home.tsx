@@ -98,7 +98,11 @@ export default function Home() {
 
   // Show auth dialog on first visit if not logged in
   useEffect(() => {
-    if (!user && !guestDismissed) {
+    if (user) {
+      setShowAuth(false);
+      return;
+    }
+    if (!guestDismissed) {
       const timer = setTimeout(() => setShowAuth(true), 500);
       return () => clearTimeout(timer);
     }
