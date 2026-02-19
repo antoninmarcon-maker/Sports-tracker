@@ -54,6 +54,7 @@ const MatchSummarySchema = z.object({
 export function getAllMatches(): MatchSummary[] {
   try {
     const raw = localStorage.getItem(MATCHES_KEY);
+    console.log('[DEBUG] getAllMatches raw entries:', raw ? JSON.parse(raw).length : 0);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -61,13 +62,13 @@ export function getAllMatches(): MatchSummary[] {
     return parsed.reduce<MatchSummary[]>((acc, item) => {
       try {
         acc.push(MatchSummarySchema.parse(item) as unknown as MatchSummary);
-      } catch {
-        // Skip invalid entries silently
-        console.warn('Skipping invalid match entry:', item?.id);
+      } catch (e) {
+        // Skip invalid entries but log the error
+        console.warn('Skipping invalid match entry:', item?.id, e);
       }
       return acc;
     }, []);
-  } catch { return []; }
+  } catch (e) { console.error('[DEBUG] getAllMatches error:', e); return []; }
 }
 
 export function getMatch(id: string): MatchSummary | null {
