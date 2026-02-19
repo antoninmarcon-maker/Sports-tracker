@@ -5,8 +5,9 @@ import logoCapbreton from '@/assets/logo-capbreton.jpeg';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getAllMatches, createNewMatch, saveMatch, setActiveMatchId, deleteMatch, getMatch } from '@/lib/matchStorage';
-import { syncLocalMatchesToCloud, getCloudMatches, saveCloudMatch, deleteCloudMatch } from '@/lib/cloudStorage';
+import { syncLocalMatchesToCloud, getCloudMatches, saveCloudMatch, deleteCloudMatch, getCloudMatchById } from '@/lib/cloudStorage';
 import { MatchSummary, SetData, Team, SportType } from '@/types/sports';
+import { toast } from 'sonner';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 import { AuthDialog } from '@/components/AuthDialog';
 import { UserMenu } from '@/components/UserMenu';
@@ -143,35 +144,50 @@ export default function Home() {
   };
 
   const handleFinishMatch = async (id: string) => {
-    const match = getMatch(id);
-    if (!match) return;
-    if (match.points.length > 0) {
-      const sport = match.sport ?? 'volleyball';
-      let blueScore: number, redScore: number;
-      if (sport === 'basketball') {
-        blueScore = match.points.filter(p => p.team === 'blue' && p.type === 'scored').reduce((s, p) => s + (p.pointValue ?? 0), 0);
-        redScore = match.points.filter(p => p.team === 'red' && p.type === 'scored').reduce((s, p) => s + (p.pointValue ?? 0), 0);
-      } else {
-        blueScore = match.points.filter(p => p.team === 'blue').length;
-        redScore = match.points.filter(p => p.team === 'red').length;
+    try {
+      let match = getMatch(id);
+      // If not in localStorage, try fetching from cloud
+      if (!match && user) {
+        const cloudMatch = await getCloudMatchById(id);
+        if (cloudMatch) {
+          match = cloudMatch;
+          saveMatch(cloudMatch); // cache locally
+        }
       }
-      const winner: Team = blueScore >= redScore ? 'blue' : 'red';
-      const setData: SetData = {
-        id: crypto.randomUUID(),
-        number: match.currentSetNumber,
-        points: [...match.points],
-        score: { blue: blueScore, red: redScore },
-        winner,
-        duration: match.chronoSeconds,
-      };
-      match.completedSets.push(setData);
-      match.points = [];
+      if (!match) { toast.error('Match introuvable'); setFinishingId(null); return; }
+
+      if (match.points.length > 0) {
+        const sport = match.sport ?? 'volleyball';
+        let blueScore: number, redScore: number;
+        if (sport === 'basketball') {
+          blueScore = match.points.filter(p => p.team === 'blue' && p.type === 'scored').reduce((s, p) => s + (p.pointValue ?? 0), 0);
+          redScore = match.points.filter(p => p.team === 'red' && p.type === 'scored').reduce((s, p) => s + (p.pointValue ?? 0), 0);
+        } else {
+          blueScore = match.points.filter(p => p.team === 'blue').length;
+          redScore = match.points.filter(p => p.team === 'red').length;
+        }
+        const winner: Team = blueScore >= redScore ? 'blue' : 'red';
+        const setData: SetData = {
+          id: crypto.randomUUID(),
+          number: match.currentSetNumber,
+          points: [...match.points],
+          score: { blue: blueScore, red: redScore },
+          winner,
+          duration: match.chronoSeconds,
+        };
+        match.completedSets.push(setData);
+        match.points = [];
+      }
+      const updated = { ...match, finished: true, updatedAt: Date.now() };
+      saveMatch(updated);
+      if (user) await saveCloudMatch(user.id, updated);
+      loadMatches(user);
+      setFinishingId(null);
+    } catch (err) {
+      console.error('Error finishing match:', err);
+      toast.error('Erreur lors de la finalisation du match.');
+      setFinishingId(null);
     }
-    const updated = { ...match, finished: true, updatedAt: Date.now() };
-    saveMatch(updated);
-    if (user) await saveCloudMatch(user.id, updated);
-    loadMatches(user);
-    setFinishingId(null);
   };
 
   const handleResume = (id: string) => {
