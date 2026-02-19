@@ -10,6 +10,7 @@ import { MatchSummary, SetData, Team, SportType } from '@/types/sports';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 import { AuthDialog } from '@/components/AuthDialog';
 import { UserMenu } from '@/components/UserMenu';
+import { SavedPlayersManager } from '@/components/SavedPlayersManager';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
@@ -59,6 +60,7 @@ export default function Home() {
   const [names, setNames] = useState({ blue: '', red: '' });
   const [selectedSport, setSelectedSport] = useState<SportType>('volleyball');
   const [finishingId, setFinishingId] = useState<string | null>(null);
+  const [showSavedPlayers, setShowSavedPlayers] = useState(false);
 
   // Load matches based on auth state
   const loadMatches = useCallback(async (currentUser: User | null) => {
@@ -185,7 +187,7 @@ export default function Home() {
         {/* Auth button */}
         <div className="absolute top-4 right-4">
           {user ? (
-            <UserMenu user={user} />
+            <UserMenu user={user} onOpenSavedPlayers={() => setShowSavedPlayers(true)} />
           ) : (
             <button
               onClick={() => setShowAuth(true)}
@@ -410,6 +412,15 @@ export default function Home() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Saved players manager */}
+      {user && (
+        <SavedPlayersManager
+          open={showSavedPlayers}
+          onOpenChange={setShowSavedPlayers}
+          userId={user.id}
+        />
       )}
 
       <footer className="px-4 py-4 border-t border-border text-center">

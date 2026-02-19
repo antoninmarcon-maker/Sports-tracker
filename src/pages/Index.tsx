@@ -89,11 +89,20 @@ const Index = () => {
   }, [isBasketball, selectedAction, selectedTeam, addFreeThrow]);
 
   // Auto-skip player assignment when not relevant
-  // In volleyball: ask for blue scored points AND red scored points (opponent faults)
-  // In basketball: always ask
+  // Volleyball: ask for blue scored AND red scored (opponent faults)
+  // Basketball: ask for blue faults only, skip red baskets
   useEffect(() => {
     if (!pendingPoint || players.length === 0) return;
-    if (isBasketball) return; // basketball always asks
+    if (isBasketball) {
+      // Basketball: only ask player for blue team faults, skip red team baskets
+      const isBlueFault = pendingPoint.team === 'blue' && pendingPoint.type === 'fault';
+      const isBlueScored = pendingPoint.team === 'blue' && pendingPoint.type === 'scored';
+      if (!isBlueFault && !isBlueScored) {
+        skipPlayerAssignment();
+      }
+      return;
+    }
+    // Volleyball
     const isBlueScored = pendingPoint.team === 'blue' && pendingPoint.type === 'scored';
     const isRedScored = pendingPoint.team === 'red' && pendingPoint.type === 'scored';
     if (!isBlueScored && !isRedScored) {
@@ -242,22 +251,32 @@ const Index = () => {
         )}
 
         {/* Player assignment modal */}
-        {pendingPoint && players.length > 0 && (
-          (isBasketball || pendingPoint.type === 'scored') && (
-            (isBasketball || pendingPoint.team === 'blue' || pendingPoint.team === 'red') && (
+        {pendingPoint && players.length > 0 && (() => {
+          // Determine if we should show the player selector
+          if (isBasketball) {
+            const isBlueFault = pendingPoint.team === 'blue' && pendingPoint.type === 'fault';
+            const isBlueScored = pendingPoint.team === 'blue' && pendingPoint.type === 'scored';
+            if (!isBlueFault && !isBlueScored) return null;
+            return (
               <PlayerSelector
                 players={players}
-                prompt={
-                  pendingPoint.team === 'red' && !isBasketball
-                    ? "Quel joueur a commis la faute ?"
-                    : "Quel joueur a marqué ?"
-                }
+                prompt={isBlueFault ? "Quel joueur a commis la faute ?" : "Quel joueur a marqué ?"}
                 onSelect={assignPlayer}
                 onSkip={skipPlayerAssignment}
               />
-            )
-          )
-        )}
+            );
+          }
+          // Volleyball
+          if (pendingPoint.type !== 'scored') return null;
+          return (
+            <PlayerSelector
+              players={players}
+              prompt={pendingPoint.team === 'red' ? "Quel joueur a commis la faute ?" : "Quel joueur a marqué ?"}
+              onSelect={assignPlayer}
+              onSkip={skipPlayerAssignment}
+            />
+          );
+        })()}
 
       </main>
 
