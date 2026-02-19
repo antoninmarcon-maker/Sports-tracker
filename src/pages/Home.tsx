@@ -340,11 +340,6 @@ export default function Home() {
 
         {/* Match history */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <History size={16} className="text-muted-foreground" />
-            <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Matchs précédents</h2>
-          </div>
-
           {loadingMatches && user ? (
             <div className="flex items-center justify-center gap-2 py-8">
               <Loader2 size={18} className="animate-spin text-primary" />
@@ -353,6 +348,11 @@ export default function Home() {
           ) : matches.length === 0 ? (
             <Instructions />
           ) : (
+            <>
+            <div className="flex items-center gap-2">
+              <History size={16} className="text-muted-foreground" />
+              <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Matchs précédents</h2>
+            </div>
             <div className="space-y-2">
               {matches.map(match => {
                 const sc = matchScore(match);
@@ -405,6 +405,7 @@ export default function Home() {
                 );
               })}
             </div>
+            </>
           )}
         </div>
       </main>
