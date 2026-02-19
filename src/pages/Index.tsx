@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { Activity, BarChart3, HelpCircle, X, ArrowLeft } from 'lucide-react';
 import { useMatchState } from '@/hooks/useMatchState';
@@ -12,7 +12,7 @@ import { PlayerSelector } from '@/components/PlayerSelector';
 import { AiAnalysis } from '@/components/AiAnalysis';
 import { AuthDialog } from '@/components/AuthDialog';
 import { getMatch, saveMatch } from '@/lib/matchStorage';
-import { getCloudMatchById } from '@/lib/cloudStorage';
+import { getCloudMatchById, saveCloudMatch } from '@/lib/cloudStorage';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { MatchSummary } from '@/types/sports';
@@ -116,6 +116,46 @@ const Index = () => {
       console.log('[DEBUG] Volleyball: showing player selector');
     }
   }, [pendingPoint, players, skipPlayerAssignment, isBasketball]);
+
+  // Cloud sync: save match_data to cloud periodically and on unmount
+  const cloudSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastCloudSaveRef = useRef<string>('');
+
+  const saveToCloud = useCallback(() => {
+    if (!user || !matchId) return;
+    const match = getMatch(matchId);
+    if (!match) return;
+    const snapshot = JSON.stringify(match);
+    if (snapshot === lastCloudSaveRef.current) return;
+    lastCloudSaveRef.current = snapshot;
+    saveCloudMatch(user.id, match).catch(err =>
+      console.error('[CloudSync] save failed:', err)
+    );
+  }, [user, matchId]);
+
+  // Debounced cloud save whenever points/sets/players change
+  useEffect(() => {
+    if (!user || !matchId || !matchReady) return;
+    if (cloudSaveTimerRef.current) clearTimeout(cloudSaveTimerRef.current);
+    cloudSaveTimerRef.current = setTimeout(() => {
+      saveToCloud();
+    }, 3000);
+    return () => {
+      if (cloudSaveTimerRef.current) clearTimeout(cloudSaveTimerRef.current);
+    };
+  }, [points, completedSets, players, teamNames, chronoSeconds, sidesSwapped, user, matchId, matchReady, saveToCloud]);
+
+  // Save to cloud on unmount (navigating back)
+  useEffect(() => {
+    return () => {
+      if (user && matchId) {
+        const match = getMatch(matchId);
+        if (match) {
+          saveCloudMatch(user.id, match).catch(() => {});
+        }
+      }
+    };
+  }, [user, matchId]);
 
   if (loading) {
     return (
