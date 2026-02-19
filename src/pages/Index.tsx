@@ -53,6 +53,13 @@ const Index = () => {
     }
   }, [isBasketball, selectedAction, selectedTeam, addFreeThrow]);
 
+  // Auto-skip player assignment for non-blue-scored points
+  useEffect(() => {
+    if (pendingPoint && players.length > 0 && !(pendingPoint.team === 'blue' && pendingPoint.type === 'scored')) {
+      skipPlayerAssignment();
+    }
+  }, [pendingPoint, players, skipPlayerAssignment]);
+
   if (!matchId || !getMatch(matchId)) {
     return <Navigate to="/" replace />;
   }
@@ -184,21 +191,11 @@ const Index = () => {
           </div>
         )}
 
-        {/* Player assignment modal */}
-        {pendingPoint && players.length > 0 && (
+        {/* Player assignment modal - only for blue team scored points */}
+        {pendingPoint && players.length > 0 && pendingPoint.team === 'blue' && pendingPoint.type === 'scored' && (
           <PlayerSelector
             players={players}
-            prompt={
-              pendingPoint.team === 'blue' && pendingPoint.type === 'scored'
-                ? 'Quel joueur a marqué ?'
-                : pendingPoint.team === 'blue' && pendingPoint.type === 'fault'
-                ? 'Quel joueur adverse a marqué contre nous ?'
-                : pendingPoint.team === 'red' && pendingPoint.type === 'fault'
-                ? 'Quel joueur a commis la faute ?'
-                : pendingPoint.team === 'red' && pendingPoint.type === 'scored'
-                ? 'Quel joueur était responsable ?'
-                : 'Quel joueur ?'
-            }
+            prompt="Quel joueur a marqué ?"
             onSelect={assignPlayer}
             onSkip={skipPlayerAssignment}
           />
