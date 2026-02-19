@@ -102,10 +102,11 @@ const Index = () => {
       }
       return;
     }
-    // Volleyball
+    // Volleyball: ask player for blue scored, red scored, AND red fault (= blue player committed fault)
     const isBlueScored = pendingPoint.team === 'blue' && pendingPoint.type === 'scored';
     const isRedScored = pendingPoint.team === 'red' && pendingPoint.type === 'scored';
-    if (!isBlueScored && !isRedScored) {
+    const isRedFault = pendingPoint.team === 'red' && pendingPoint.type === 'fault';
+    if (!isBlueScored && !isRedScored && !isRedFault) {
       skipPlayerAssignment();
     }
   }, [pendingPoint, players, skipPlayerAssignment, isBasketball]);
@@ -267,12 +268,14 @@ const Index = () => {
               />
             );
           }
-          // Volleyball
-          if (pendingPoint.type !== 'scored') return null;
+          // Volleyball: show player selector for blue scored, red scored, and red fault
+          const showSelector = pendingPoint.type === 'scored' || (pendingPoint.team === 'red' && pendingPoint.type === 'fault');
+          if (!showSelector) return null;
+          const isFaultByBlue = pendingPoint.team === 'red' && (pendingPoint.type === 'fault' || pendingPoint.type === 'scored');
           return (
             <PlayerSelector
               players={players}
-              prompt={pendingPoint.team === 'red' ? "Quel joueur a commis la faute ?" : "Quel joueur a marqué ?"}
+              prompt={isFaultByBlue ? "Quel joueur a commis la faute ?" : "Quel joueur a marqué ?"}
               onSelect={assignPlayer}
               onSkip={skipPlayerAssignment}
             />
