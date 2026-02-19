@@ -280,7 +280,7 @@ export function ScoreBoard({
           <button
             onClick={onEndSet}
             disabled={!canUndo}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 disabled:opacity-30 transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-action-fault/20 text-action-fault border border-action-fault/30 hover:bg-action-fault/30 disabled:opacity-30 transition-all"
           >
             <Flag size={16} /> Fin du Set
           </button>
