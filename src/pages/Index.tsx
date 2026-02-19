@@ -9,7 +9,11 @@ import { HeatmapView } from '@/components/HeatmapView';
 import { SetHistory } from '@/components/SetHistory';
 import { PlayerRoster } from '@/components/PlayerRoster';
 import { PlayerSelector } from '@/components/PlayerSelector';
+import { AiAnalysis } from '@/components/AiAnalysis';
+import { AuthDialog } from '@/components/AuthDialog';
 import { getMatch } from '@/lib/matchStorage';
+import { supabase } from '@/integrations/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 type Tab = 'match' | 'stats';
 
@@ -18,6 +22,14 @@ const Index = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('match');
   const [showHelp, setShowHelp] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [showAuthForAi, setShowAuthForAi] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
+    return () => subscription.unsubscribe();
+  }, []);
 
   const matchState = useMatchState(matchId ?? '');
 
@@ -155,7 +167,21 @@ const Index = () => {
             )}
           </div>
         ) : (
-          <HeatmapView points={allPoints} completedSets={completedSets} currentSetPoints={points} currentSetNumber={currentSetNumber} stats={stats} teamNames={teamNames} players={players} sport={sport} />
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <AiAnalysis
+                points={allPoints}
+                completedSets={completedSets}
+                currentSetPoints={points}
+                teamNames={teamNames}
+                players={players}
+                sport={sport}
+                isLoggedIn={!!user}
+                onLoginRequired={() => setShowAuthForAi(true)}
+              />
+            </div>
+            <HeatmapView points={allPoints} completedSets={completedSets} currentSetPoints={points} currentSetNumber={currentSetNumber} stats={stats} teamNames={teamNames} players={players} sport={sport} />
+          </div>
         )}
 
         {/* Player assignment modal */}
@@ -211,6 +237,13 @@ const Index = () => {
           </div>
         </div>
       )}
+
+      {/* Auth dialog for AI */}
+      <AuthDialog
+        open={showAuthForAi}
+        onOpenChange={setShowAuthForAi}
+        message="Cette fonctionnalité nécessite une connexion."
+      />
     </div>
   );
 };
