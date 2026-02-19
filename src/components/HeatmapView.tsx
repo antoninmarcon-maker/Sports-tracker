@@ -532,7 +532,7 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
         </div>
 
         {players.length > 0 && (
-          <PlayerStats points={filteredPoints} players={players} teamName={teamNames.blue} />
+          <PlayerStats points={filteredPoints} players={players} teamName={teamNames.blue} sport={sport} />
         )}
 
         {showHeatmap && (

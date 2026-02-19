@@ -41,10 +41,10 @@ function playerSetStatsBasket(pts: Point[], players: Player[]) {
   return players.map(player => {
     const pp = pts.filter(p => p.playerId === player.id);
     const scored = pp.filter(p => p.team === 'blue' && p.type === 'scored');
-    const faults = pp.filter(p => p.team === 'blue' && p.type === 'fault');
+    const negatives = pp.filter(p => p.team === 'red');
 
     const totalPoints = scored.reduce((s, p) => s + (p.pointValue ?? 0), 0);
-    const total = scored.length + faults.length;
+    const total = scored.length + negatives.length;
 
     return {
       '#': player.number,
@@ -54,10 +54,11 @@ function playerSetStatsBasket(pts: Point[], players: Player[]) {
       'Ext. (3pts)': scored.filter(p => p.action === 'three_points').length,
       'Total paniers': scored.length,
       'Total points': totalPoints,
-      'Tirs manqués': faults.filter(p => p.action === 'missed_shot').length,
-      'Pertes balle': faults.filter(p => p.action === 'turnover').length,
-      'Fautes': faults.filter(p => p.action === 'foul_committed').length,
-      'Total négatifs': faults.length,
+      'Pts encaissés': negatives.filter(p => p.type === 'scored').length,
+      'Tirs manqués': negatives.filter(p => p.action === 'missed_shot').length,
+      'Pertes balle': negatives.filter(p => p.action === 'turnover').length,
+      'Fautes': negatives.filter(p => p.action === 'foul_committed').length,
+      'Total négatifs': negatives.length,
       'Total actions': total,
       'Efficacité (%)': total > 0 ? Math.round(scored.length / total * 100) : 0,
     };

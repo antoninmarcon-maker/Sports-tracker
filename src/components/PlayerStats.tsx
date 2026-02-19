@@ -1,42 +1,55 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { Point, Player, OFFENSIVE_ACTIONS, FAULT_ACTIONS } from '@/types/volleyball';
+import { Point, Player, SportType, OFFENSIVE_ACTIONS, FAULT_ACTIONS, BASKET_SCORED_ACTIONS, BASKET_FAULT_ACTIONS } from '@/types/volleyball';
 
 interface PlayerStatsProps {
   points: Point[];
   players: Player[];
   teamName: string;
+  sport?: SportType;
 }
 
-export function PlayerStats({ points, players, teamName }: PlayerStatsProps) {
+export function PlayerStats({ points, players, teamName, sport = 'volleyball' }: PlayerStatsProps) {
   const [expandedPlayers, setExpandedPlayers] = useState<Record<string, { scored?: boolean; faults?: boolean }>>({});
+  const isBasketball = sport === 'basketball';
 
   const stats = useMemo(() => {
     return players.map(player => {
       const playerPoints = points.filter(p => p.playerId === player.id);
       const scored = playerPoints.filter(p => p.team === 'blue' && p.type === 'scored');
       const faultWins = playerPoints.filter(p => p.team === 'blue' && p.type === 'fault');
-      // Negative: opponent scored attributed to this player, or this player's own faults
       const negatives = playerPoints.filter(p => p.team === 'red');
 
+      const scoredCount = isBasketball
+        ? scored.reduce((sum, p) => sum + (p.pointValue ?? 0), 0)
+        : scored.length + faultWins.length;
       const negativeCount = negatives.length;
-      const scoredCount = scored.length + faultWins.length;
-      const total = scoredCount + negativeCount;
-      const efficiency = total > 0 ? (scoredCount / total * 100) : 0;
+      const total = (isBasketball ? scored.length : scoredCount) + negativeCount;
+      const efficiency = total > 0
+        ? ((isBasketball ? scored.length : scoredCount) / total * 100)
+        : 0;
 
       // Breakdown for scored
-      const scoredBreakdown = OFFENSIVE_ACTIONS.map(a => ({
+      const scoredActions = isBasketball ? BASKET_SCORED_ACTIONS : OFFENSIVE_ACTIONS;
+      const scoredBreakdown = scoredActions.map(a => ({
         label: a.label,
         count: scored.filter(p => p.action === a.key).length,
       })).filter(b => b.count > 0);
 
+      // Add fault wins for volleyball
+      if (!isBasketball && faultWins.length > 0) {
+        scoredBreakdown.push({ label: 'Fautes adverses', count: faultWins.length });
+      }
+
       // Breakdown for negatives
+      const negScoredActions = isBasketball ? BASKET_SCORED_ACTIONS : OFFENSIVE_ACTIONS;
+      const negFaultActions = isBasketball ? BASKET_FAULT_ACTIONS : FAULT_ACTIONS;
       const faultBreakdown = [
-        ...OFFENSIVE_ACTIONS.map(a => ({
+        ...negScoredActions.map(a => ({
           label: a.label,
           count: negatives.filter(p => p.type === 'scored' && p.action === a.key).length,
         })),
-        ...FAULT_ACTIONS.map(a => ({
+        ...negFaultActions.map(a => ({
           label: a.label,
           count: negatives.filter(p => p.type === 'fault' && p.action === a.key).length,
         })),
@@ -53,7 +66,7 @@ export function PlayerStats({ points, players, teamName }: PlayerStatsProps) {
       };
     }).filter(s => s.total > 0)
       .sort((a, b) => b.scored - a.scored);
-  }, [points, players]);
+  }, [points, players, isBasketball]);
 
   const toggleSection = (playerId: string, section: 'scored' | 'faults') => {
     setExpandedPlayers(prev => {
