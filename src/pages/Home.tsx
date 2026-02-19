@@ -345,7 +345,7 @@ export default function Home() {
             <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Matchs précédents</h2>
           </div>
 
-          {loadingMatches ? (
+          {loadingMatches && user ? (
             <div className="flex items-center justify-center gap-2 py-8">
               <Loader2 size={18} className="animate-spin text-primary" />
               <span className="text-sm text-muted-foreground">Chargement des matchs…</span>
