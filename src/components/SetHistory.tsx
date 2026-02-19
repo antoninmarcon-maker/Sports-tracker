@@ -7,6 +7,7 @@ interface SetHistoryProps {
   currentSetNumber: number;
   setsScore: { blue: number; red: number };
   teamNames: { blue: string; red: string };
+  isFinished?: boolean;
 }
 
 function formatDuration(seconds: number) {
@@ -15,7 +16,7 @@ function formatDuration(seconds: number) {
   return `${m}min ${s.toString().padStart(2, '0')}s`;
 }
 
-export function SetHistory({ completedSets, currentSetNumber, setsScore, teamNames }: SetHistoryProps) {
+export function SetHistory({ completedSets, currentSetNumber, setsScore, teamNames, isFinished = false }: SetHistoryProps) {
   const [expandedSet, setExpandedSet] = useState<string | null>(null);
 
   if (completedSets.length === 0 && currentSetNumber === 1) return null;
@@ -33,7 +34,15 @@ export function SetHistory({ completedSets, currentSetNumber, setsScore, teamNam
           <span className="text-xs text-muted-foreground">-</span>
           <span className="text-sm font-black text-team-red">{setsScore.red}</span>
         </div>
-        <span className="text-xs text-muted-foreground">Set {currentSetNumber} en cours</span>
+        <span className="text-xs text-muted-foreground">
+          {isFinished
+            ? (setsScore.blue > setsScore.red
+              ? `🏆 ${teamNames.blue}`
+              : setsScore.red > setsScore.blue
+              ? `🏆 ${teamNames.red}`
+              : 'Égalité')
+            : `Set ${currentSetNumber} en cours`}
+        </span>
       </div>
 
       {/* Previous sets */}

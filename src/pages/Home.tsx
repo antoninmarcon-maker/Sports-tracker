@@ -179,7 +179,9 @@ export default function Home() {
                       <div className="text-right">
                         <p className="text-lg font-black text-foreground tabular-nums">{sc.blue} - {sc.red}</p>
                         <p className="text-[11px] text-muted-foreground">
-                          {match.finished ? 'Terminé' : `Set ${match.currentSetNumber} en cours`} · {totalPoints} pts
+                          {match.finished
+                            ? (sc.blue > sc.red ? `🏆 ${match.teamNames.blue}` : sc.red > sc.blue ? `🏆 ${match.teamNames.red}` : 'Égalité')
+                            : `Set ${match.currentSetNumber} en cours`} · {totalPoints} pts
                         </p>
                       </div>
                     </div>

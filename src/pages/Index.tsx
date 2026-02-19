@@ -88,6 +88,7 @@ const Index = () => {
               currentSetNumber={currentSetNumber}
               setsScore={setsScore}
               teamNames={teamNames}
+              isFinished={isFinished}
             />
             <PlayerRoster
               players={players}

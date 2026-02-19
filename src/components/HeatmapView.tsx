@@ -1,11 +1,18 @@
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { Download } from 'lucide-react';
+import { Download, ChevronDown, Copy, Image, FileSpreadsheet, Map } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { Point, SetData, Player, isOffensiveAction, OFFENSIVE_ACTIONS, FAULT_ACTIONS } from '@/types/volleyball';
 import { PointTimeline } from './PointTimeline';
 import { PlayerStats } from './PlayerStats';
 import { exportMatchToExcel } from '@/lib/excelExport';
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 interface HeatmapViewProps {
   points: Point[];
   completedSets: SetData[];
@@ -167,6 +174,120 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
       setExporting(false);
     }
   }, [teamNames, points, completedSets, currentSetPoints, currentSetNumber]);
+
+  const exportCourtPng = useCallback(async (pts: Point[], label: string) => {
+    const ACTION_SHORT: Record<string, string> = {
+      attack: 'A', ace: 'As', block: 'B', bidouille: 'Bi', seconde_main: '2M',
+      out: 'O', net_fault: 'F', service_miss: 'SL', block_out: 'BO', other_offensive: '',
+    };
+    // Build an offscreen SVG-based court with points
+    const container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;top:0;width:600px;';
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 600 440');
+    svg.setAttribute('width', '600');
+    svg.setAttribute('height', '440');
+    svg.style.display = 'block';
+
+    // Title bar
+    const titleRect = document.createElementNS(svgNS, 'rect');
+    titleRect.setAttribute('x', '0'); titleRect.setAttribute('y', '0');
+    titleRect.setAttribute('width', '600'); titleRect.setAttribute('height', '40');
+    titleRect.setAttribute('fill', '#1a1a2e');
+    svg.appendChild(titleRect);
+    const titleText = document.createElementNS(svgNS, 'text');
+    titleText.setAttribute('x', '300'); titleText.setAttribute('y', '26');
+    titleText.setAttribute('text-anchor', 'middle');
+    titleText.setAttribute('fill', 'white'); titleText.setAttribute('font-size', '14');
+    titleText.setAttribute('font-weight', 'bold');
+    titleText.textContent = `🏐 ${teamNames.blue} vs ${teamNames.red} — ${label}`;
+    svg.appendChild(titleText);
+
+    // Court background
+    const bg = document.createElementNS(svgNS, 'rect');
+    bg.setAttribute('x', '0'); bg.setAttribute('y', '40');
+    bg.setAttribute('width', '600'); bg.setAttribute('height', '400');
+    bg.setAttribute('fill', 'hsl(142, 40%, 28%)');
+    svg.appendChild(bg);
+
+    // Court border
+    const border = document.createElementNS(svgNS, 'rect');
+    border.setAttribute('x', '20'); border.setAttribute('y', '60');
+    border.setAttribute('width', '560'); border.setAttribute('height', '360');
+    border.setAttribute('fill', 'none'); border.setAttribute('stroke', 'white');
+    border.setAttribute('stroke-width', '2'); border.setAttribute('opacity', '0.9');
+    svg.appendChild(border);
+
+    // Net
+    const net = document.createElementNS(svgNS, 'line');
+    net.setAttribute('x1', '300'); net.setAttribute('y1', '60');
+    net.setAttribute('x2', '300'); net.setAttribute('y2', '420');
+    net.setAttribute('stroke', 'white'); net.setAttribute('stroke-width', '3');
+    svg.appendChild(net);
+
+    // Attack lines
+    for (const lx of [200, 400]) {
+      const line = document.createElementNS(svgNS, 'line');
+      line.setAttribute('x1', String(lx)); line.setAttribute('y1', '60');
+      line.setAttribute('x2', String(lx)); line.setAttribute('y2', '420');
+      line.setAttribute('stroke', 'white'); line.setAttribute('stroke-width', '1.5');
+      line.setAttribute('opacity', '0.6');
+      svg.appendChild(line);
+    }
+
+    // Points
+    pts.forEach(p => {
+      const cx = p.x * 600;
+      const cy = p.y * 400 + 40;
+      const color = p.team === 'blue' ? 'hsl(217, 91%, 60%)' : 'hsl(0, 84%, 60%)';
+      const isFault = p.type === 'fault';
+      const circle = document.createElementNS(svgNS, 'circle');
+      circle.setAttribute('cx', String(cx)); circle.setAttribute('cy', String(cy));
+      circle.setAttribute('r', '9'); circle.setAttribute('stroke', color);
+      circle.setAttribute('stroke-width', isFault ? '2' : '1.5');
+      circle.setAttribute('fill', isFault ? 'transparent' : color);
+      circle.setAttribute('opacity', '0.85');
+      if (isFault) circle.setAttribute('stroke-dasharray', '3 2');
+      svg.appendChild(circle);
+      const al = ACTION_SHORT[p.action] ?? '';
+      if (al) {
+        const txt = document.createElementNS(svgNS, 'text');
+        txt.setAttribute('x', String(cx)); txt.setAttribute('y', String(cy + 4));
+        txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('fill', isFault ? color : 'white');
+        txt.setAttribute('font-size', '10'); txt.setAttribute('font-weight', 'bold');
+        txt.textContent = al;
+        svg.appendChild(txt);
+      }
+    });
+
+    container.appendChild(svg);
+    document.body.appendChild(container);
+    try {
+      const canvas = await html2canvas(container, { backgroundColor: '#1a1a2e', scale: 2 });
+      const link = document.createElement('a');
+      link.download = `terrain-${teamNames.blue}-vs-${teamNames.red}-${label.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } finally {
+      document.body.removeChild(container);
+    }
+  }, [teamNames]);
+
+  const copyScoreText = useCallback(() => {
+    const allSets = [...completedSets];
+    const setsBlue = allSets.filter(s => s.winner === 'blue').length;
+    const setsRed = allSets.filter(s => s.winner === 'red').length;
+    const details = allSets.map(s => `${s.score.blue}-${s.score.red}`).join(', ');
+    let text = `Match : ${teamNames.blue} vs ${teamNames.red} | Score Sets : ${setsBlue}-${setsRed}`;
+    if (details) text += ` | Détails : ${details}`;
+    if (currentSetPoints.length > 0) {
+      const blueNow = currentSetPoints.filter(p => p.team === 'blue').length;
+      const redNow = currentSetPoints.filter(p => p.team === 'red').length;
+      text += ` | Set ${currentSetNumber} en cours : ${blueNow}-${redNow}`;
+    }
+    navigator.clipboard.writeText(text);
+  }, [completedSets, currentSetPoints, currentSetNumber, teamNames]);
 
   const filteredPoints = useMemo(() => {
     if (setFilter_ === 'all') return points;
@@ -366,22 +487,47 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
         </button>
       </div>
 
-      <button
-        onClick={handleExport}
-        disabled={exporting}
-        className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-all"
-      >
-        <Download size={16} />
-        {exporting ? 'Export en cours...' : 'Exporter stats (PNG)'}
-      </button>
-
-      <button
-        onClick={() => exportMatchToExcel(completedSets, currentSetPoints, currentSetNumber, teamNames, players)}
-        className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg bg-accent text-accent-foreground hover:opacity-90 transition-all"
-      >
-        <Download size={16} />
-        Exporter en Excel (.xlsx)
-      </button>
+      {/* Export dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-all"
+          >
+            <Download size={16} />
+            Options d'Export
+            <ChevronDown size={14} />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-64 bg-popover border border-border shadow-lg z-50">
+          <DropdownMenuLabel className="text-xs text-muted-foreground">Images PNG</DropdownMenuLabel>
+          <DropdownMenuItem onClick={handleExport} disabled={exporting} className="cursor-pointer">
+            <Image size={14} className="mr-2" />
+            {exporting ? 'Export en cours...' : 'Exporter stats (PNG)'}
+          </DropdownMenuItem>
+          {completedSets.map(s => (
+            <DropdownMenuItem key={`court-${s.number}`} onClick={() => exportCourtPng(s.points, `Set ${s.number}`)} className="cursor-pointer">
+              <Map size={14} className="mr-2" />
+              Terrain Set {s.number} (PNG)
+            </DropdownMenuItem>
+          ))}
+          {currentSetPoints.length > 0 && (
+            <DropdownMenuItem onClick={() => exportCourtPng(currentSetPoints, `Set ${currentSetNumber} (en cours)`)} className="cursor-pointer">
+              <Map size={14} className="mr-2" />
+              Terrain Set {currentSetNumber} en cours (PNG)
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-xs text-muted-foreground">Autres formats</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => exportMatchToExcel(completedSets, currentSetPoints, currentSetNumber, teamNames, players)} className="cursor-pointer">
+            <FileSpreadsheet size={14} className="mr-2" />
+            Exporter en Excel (.xlsx)
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={copyScoreText} className="cursor-pointer">
+            <Copy size={14} className="mr-2" />
+            Copier score (texte)
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <p className="text-[8px] text-muted-foreground/50 text-center">Volley Tracker · Capbreton</p>
     </div>
