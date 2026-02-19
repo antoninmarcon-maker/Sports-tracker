@@ -57,6 +57,7 @@ function Instructions({ onClose }: { onClose?: () => void }) {
 export default function Home() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
+  const [authLoaded, setAuthLoaded] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [guestDismissed, setGuestDismissed] = useState(() => sessionStorage.getItem('guestDismissed') === 'true');
   const [matches, setMatches] = useState<MatchSummary[]>([]);
@@ -96,30 +97,52 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
+    // Listener for ongoing auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
       const u = session?.user ?? null;
       setUser(u);
       if (u) {
-        // Sync local matches on login
-        await syncLocalMatchesToCloud(u.id);
-        await loadMatches(u);
-      } else {
+        setTimeout(async () => {
+          if (!isMounted) return;
+          await syncLocalMatchesToCloud(u.id);
+          await loadMatches(u);
+        }, 0);
+      } else if (authLoaded) {
+        // Only reload as guest if auth was already loaded (avoid flash on init)
         loadMatches(null);
       }
     });
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const u = session?.user ?? null;
-      setUser(u);
-      if (u) {
-        await syncLocalMatchesToCloud(u.id);
+
+    // Initial session load
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        const u = session?.user ?? null;
+        setUser(u);
+        if (u) {
+          await syncLocalMatchesToCloud(u.id);
+        }
+        await loadMatches(u);
+      } finally {
+        if (isMounted) setAuthLoaded(true);
       }
-      loadMatches(u);
-    });
-    return () => subscription.unsubscribe();
+    };
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [loadMatches]);
 
-  // Show auth dialog on first visit if not logged in
+  // Show auth dialog on first visit if not logged in AND auth is loaded
   useEffect(() => {
+    if (!authLoaded) return;
     if (user) {
       setShowAuth(false);
       return;
@@ -128,7 +151,7 @@ export default function Home() {
       const timer = setTimeout(() => setShowAuth(true), 500);
       return () => clearTimeout(timer);
     }
-  }, [user, guestDismissed]);
+  }, [user, guestDismissed, authLoaded]);
 
   const handleCreate = () => {
     const match = createNewMatch({
