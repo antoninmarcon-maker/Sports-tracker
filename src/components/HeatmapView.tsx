@@ -189,11 +189,11 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
   }, [teamNames, filteredPoints, setFilter_, currentSetNumber, completedSets, sport]);
 
   const exportCourtPng = useCallback(async (pts: Point[], label: string) => {
-    const ACTION_SHORT: Record<string, string> = {
-      attack: 'A', ace: 'As', block: 'B', bidouille: 'Bi', seconde_main: '2M',
-      out: 'O', net_fault: 'F', service_miss: 'SL', block_out: 'BO', other_offensive: '',
-    };
-    // Build an offscreen SVG-based court with points
+    const isBasket = sport === 'basketball';
+    const ACTION_SHORT: Record<string, string> = isBasket
+      ? { free_throw: '1', two_points: '2', three_points: '3', missed_shot: 'X', turnover: 'T', foul_committed: 'F' }
+      : { attack: 'A', ace: 'As', block: 'B', bidouille: 'Bi', seconde_main: '2M', out: 'O', net_fault: 'F', service_miss: 'SL', block_out: 'BO', other_offensive: '' };
+
     const container = document.createElement('div');
     container.style.cssText = 'position:absolute;left:-9999px;top:0;width:600px;';
     const svgNS = 'http://www.w3.org/2000/svg';
@@ -214,14 +214,14 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
     titleText.setAttribute('text-anchor', 'middle');
     titleText.setAttribute('fill', 'white'); titleText.setAttribute('font-size', '14');
     titleText.setAttribute('font-weight', 'bold');
-    titleText.textContent = `🏐 ${teamNames.blue} vs ${teamNames.red} — ${label}`;
+    titleText.textContent = `${isBasket ? '🏀' : '🏐'} ${teamNames.blue} vs ${teamNames.red} — ${label}`;
     svg.appendChild(titleText);
 
     // Court background
     const bg = document.createElementNS(svgNS, 'rect');
     bg.setAttribute('x', '0'); bg.setAttribute('y', '40');
     bg.setAttribute('width', '600'); bg.setAttribute('height', '400');
-    bg.setAttribute('fill', 'hsl(142, 40%, 28%)');
+    bg.setAttribute('fill', isBasket ? 'hsl(30, 50%, 35%)' : 'hsl(142, 40%, 28%)');
     svg.appendChild(bg);
 
     // Court border
@@ -232,21 +232,52 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
     border.setAttribute('stroke-width', '2'); border.setAttribute('opacity', '0.9');
     svg.appendChild(border);
 
-    // Net
-    const net = document.createElementNS(svgNS, 'line');
-    net.setAttribute('x1', '300'); net.setAttribute('y1', '60');
-    net.setAttribute('x2', '300'); net.setAttribute('y2', '420');
-    net.setAttribute('stroke', 'white'); net.setAttribute('stroke-width', '3');
-    svg.appendChild(net);
+    const makeLine = (x1: number, y1: number, x2: number, y2: number, sw: string, op: string) => {
+      const l = document.createElementNS(svgNS, 'line');
+      l.setAttribute('x1', String(x1)); l.setAttribute('y1', String(y1));
+      l.setAttribute('x2', String(x2)); l.setAttribute('y2', String(y2));
+      l.setAttribute('stroke', 'white'); l.setAttribute('stroke-width', sw);
+      l.setAttribute('opacity', op);
+      return l;
+    };
 
-    // Attack lines
-    for (const lx of [200, 400]) {
-      const line = document.createElementNS(svgNS, 'line');
-      line.setAttribute('x1', String(lx)); line.setAttribute('y1', '60');
-      line.setAttribute('x2', String(lx)); line.setAttribute('y2', '420');
-      line.setAttribute('stroke', 'white'); line.setAttribute('stroke-width', '1.5');
-      line.setAttribute('opacity', '0.6');
-      svg.appendChild(line);
+    if (isBasket) {
+      // Center line
+      svg.appendChild(makeLine(300, 60, 300, 420, '2', '0.8'));
+      // Center circle
+      const cc = document.createElementNS(svgNS, 'circle');
+      cc.setAttribute('cx', '300'); cc.setAttribute('cy', '240');
+      cc.setAttribute('r', '40'); cc.setAttribute('fill', 'none');
+      cc.setAttribute('stroke', 'white'); cc.setAttribute('stroke-width', '1.5'); cc.setAttribute('opacity', '0.5');
+      svg.appendChild(cc);
+      // 3-point arcs
+      const arcLeft = document.createElementNS(svgNS, 'path');
+      arcLeft.setAttribute('d', 'M 70 120 A 120 120 0 0 1 70 360');
+      arcLeft.setAttribute('fill', 'none'); arcLeft.setAttribute('stroke', 'white');
+      arcLeft.setAttribute('stroke-width', '1.5'); arcLeft.setAttribute('opacity', '0.7');
+      svg.appendChild(arcLeft);
+      svg.appendChild(makeLine(20, 120, 70, 120, '1.5', '0.7'));
+      svg.appendChild(makeLine(20, 360, 70, 360, '1.5', '0.7'));
+      const arcRight = document.createElementNS(svgNS, 'path');
+      arcRight.setAttribute('d', 'M 530 360 A 120 120 0 0 1 530 120');
+      arcRight.setAttribute('fill', 'none'); arcRight.setAttribute('stroke', 'white');
+      arcRight.setAttribute('stroke-width', '1.5'); arcRight.setAttribute('opacity', '0.7');
+      svg.appendChild(arcRight);
+      svg.appendChild(makeLine(530, 120, 580, 120, '1.5', '0.7'));
+      svg.appendChild(makeLine(530, 360, 580, 360, '1.5', '0.7'));
+      // Baskets
+      for (const bx of [50, 550]) {
+        const basket = document.createElementNS(svgNS, 'circle');
+        basket.setAttribute('cx', String(bx)); basket.setAttribute('cy', '240');
+        basket.setAttribute('r', '8'); basket.setAttribute('fill', 'none');
+        basket.setAttribute('stroke', 'orange'); basket.setAttribute('stroke-width', '2'); basket.setAttribute('opacity', '0.8');
+        svg.appendChild(basket);
+      }
+    } else {
+      // Volleyball: net + attack lines
+      svg.appendChild(makeLine(300, 60, 300, 420, '3', '1'));
+      svg.appendChild(makeLine(200, 60, 200, 420, '1.5', '0.6'));
+      svg.appendChild(makeLine(400, 60, 400, 420, '1.5', '0.6'));
     }
 
     // Points
@@ -285,7 +316,7 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
     } finally {
       document.body.removeChild(container);
     }
-  }, [teamNames]);
+  }, [teamNames, sport]);
 
   const getScoreText = useCallback(() => {
     const allSets = [...completedSets];
