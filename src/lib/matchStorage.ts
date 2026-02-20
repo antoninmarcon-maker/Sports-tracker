@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MatchSummary, Player } from '@/types/sports';
+import { MatchSummary, Player, SportType } from '@/types/sports';
 
 const MATCHES_KEY = 'volley-tracker-matches';
 const ACTIVE_MATCH_KEY = 'volley-tracker-active-match-id';
@@ -17,7 +17,7 @@ const PointSchema = z.object({
   id: z.string(),
   team: z.enum(['blue', 'red']),
   type: z.enum(['scored', 'fault']),
-  action: z.enum(['attack', 'ace', 'block', 'bidouille', 'seconde_main', 'other_offensive', 'out', 'net_fault', 'service_miss', 'block_out', 'free_throw', 'two_points', 'three_points', 'missed_shot', 'turnover', 'foul_committed']),
+  action: z.string(),
   x: z.number(),
   y: z.number(),
   timestamp: z.number(),
@@ -46,7 +46,8 @@ const MatchSummarySchema = z.object({
   updatedAt: z.number(),
   finished: z.boolean(),
   players: z.array(PlayerSchema).optional(),
-  sport: z.enum(['volleyball', 'basketball']).optional(),
+  sport: z.enum(['volleyball', 'basketball', 'tennis', 'padel']).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 // --- Storage functions ---
@@ -126,7 +127,7 @@ export function getLastRoster(): Player[] {
   } catch { return []; }
 }
 
-export function createNewMatch(teamNames: { blue: string; red: string }, sport: 'volleyball' | 'basketball' = 'volleyball'): MatchSummary {
+export function createNewMatch(teamNames: { blue: string; red: string }, sport: SportType = 'volleyball', metadata?: Record<string, unknown>): MatchSummary {
   const lastRoster = getLastRoster();
   return {
     id: crypto.randomUUID(),
@@ -141,5 +142,6 @@ export function createNewMatch(teamNames: { blue: string; red: string }, sport: 
     updatedAt: Date.now(),
     finished: false,
     sport,
+    metadata: metadata as any,
   };
 }

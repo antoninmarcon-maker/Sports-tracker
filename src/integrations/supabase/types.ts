@@ -46,6 +46,7 @@ export type Database = {
           finished: boolean
           id: string
           match_data: Json
+          metadata: Json | null
           share_token: string | null
           sides_swapped: boolean
           sport: string
@@ -61,6 +62,7 @@ export type Database = {
           finished?: boolean
           id?: string
           match_data: Json
+          metadata?: Json | null
           share_token?: string | null
           sides_swapped?: boolean
           sport?: string
@@ -76,6 +78,7 @@ export type Database = {
           finished?: boolean
           id?: string
           match_data?: Json
+          metadata?: Json | null
           share_token?: string | null
           sides_swapped?: boolean
           sport?: string

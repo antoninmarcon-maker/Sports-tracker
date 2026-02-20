@@ -237,7 +237,14 @@ export default function Home() {
     navigate(`/match/${id}`);
   };
 
-  const sportIcon = (sport?: SportType) => sport === 'basketball' ? '🏀' : '🏐';
+  const sportIcon = (sport?: SportType) => {
+    switch (sport) {
+      case 'basketball': return '🏀';
+      case 'tennis': return '🎾';
+      case 'padel': return '🏓';
+      default: return '🏐';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -311,27 +318,25 @@ export default function Home() {
               {/* Sport selector */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-muted-foreground block">Sport</label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setSelectedSport('volleyball')}
-                    className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all border-2 ${
-                      selectedSport === 'volleyball'
-                        ? 'bg-primary/15 text-primary border-primary/40'
-                        : 'bg-secondary text-secondary-foreground border-transparent hover:bg-secondary/80'
-                    }`}
-                  >
-                    🏐 Volley-ball
-                  </button>
-                  <button
-                    onClick={() => setSelectedSport('basketball')}
-                    className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all border-2 ${
-                      selectedSport === 'basketball'
-                        ? 'bg-orange-500/15 text-orange-500 border-orange-500/40'
-                        : 'bg-secondary text-secondary-foreground border-transparent hover:bg-secondary/80'
-                    }`}
-                  >
-                    🏀 Basket-ball
-                  </button>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { key: 'volleyball' as SportType, icon: '🏐', label: 'Volley-ball', hue: 'hsl(var(--primary))' },
+                    { key: 'basketball' as SportType, icon: '🏀', label: 'Basket-ball', hue: 'hsl(30, 90%, 50%)' },
+                    { key: 'tennis' as SportType, icon: '🎾', label: 'Tennis', hue: 'hsl(142, 70%, 40%)' },
+                    { key: 'padel' as SportType, icon: '🏓', label: 'Padel', hue: 'hsl(210, 80%, 50%)' },
+                  ]).map(s => (
+                    <button
+                      key={s.key}
+                      onClick={() => setSelectedSport(s.key)}
+                      className="py-3 rounded-xl font-bold text-sm transition-all border-2"
+                      style={selectedSport === s.key
+                        ? { background: `${s.hue}15`, color: s.hue, borderColor: `${s.hue}66` }
+                        : { background: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))', borderColor: 'transparent' }
+                      }
+                    >
+                      {s.icon} {s.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
