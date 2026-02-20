@@ -1,5 +1,5 @@
 import { Undo2, RotateCcw, Flag, ArrowLeftRight, Play, Pause, Timer, Pencil, Plus, X, ChevronDown } from 'lucide-react';
-import { Team, PointType, ActionType, OffensiveAction, FaultAction, OFFENSIVE_ACTIONS, FAULT_ACTIONS, SportType, BASKET_SCORED_ACTIONS, BASKET_FAULT_ACTIONS } from '@/types/sports';
+import { Team, PointType, ActionType, SportType, OFFENSIVE_ACTIONS, FAULT_ACTIONS, BASKET_SCORED_ACTIONS, BASKET_FAULT_ACTIONS, getScoredActionsForSport, getFaultActionsForSport, getPeriodLabel } from '@/types/sports';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 
@@ -69,7 +69,8 @@ export function ScoreBoard({
   const [confirmEndSet, setConfirmEndSet] = useState(false);
 
   const isBasketball = sport === 'basketball';
-  const periodLabel = isBasketball ? 'QT' : 'Set';
+  const isTennisOrPadel = sport === 'tennis' || sport === 'padel';
+  const periodLabel = getPeriodLabel(sport);
 
   const left: Team = sidesSwapped ? 'red' : 'blue';
   const right: Team = sidesSwapped ? 'blue' : 'red';
@@ -100,26 +101,30 @@ export function ScoreBoard({
 
   // Get filtered actions based on sport and context
   const getScoredActions = () => {
-    if (isBasketball) return BASKET_SCORED_ACTIONS;
-    return OFFENSIVE_ACTIONS.filter(a => {
-      if (!servingTeam || !menuTeam) return true;
-      if (a.key === 'ace' && servingTeam !== menuTeam) return false;
-      return true;
-    });
+    const actions = getScoredActionsForSport(sport);
+    if (sport === 'volleyball') {
+      return actions.filter(a => {
+        if (!servingTeam || !menuTeam) return true;
+        if (a.key === 'ace' && servingTeam !== menuTeam) return false;
+        return true;
+      });
+    }
+    return actions;
   };
 
-  const getFaultActions = () => {
-    if (isBasketball) return BASKET_FAULT_ACTIONS;
-    return FAULT_ACTIONS.filter(a => {
-      if (!servingTeam || !menuTeam) return true;
-      if (a.key === 'service_miss' && servingTeam === menuTeam) return false;
-      return true;
-    });
+  const getFilteredFaultActions = () => {
+    const actions = getFaultActionsForSport(sport);
+    if (sport === 'volleyball') {
+      return actions.filter(a => {
+        if (!servingTeam || !menuTeam) return true;
+        if (a.key === 'service_miss' && servingTeam === menuTeam) return false;
+        return true;
+      });
+    }
+    return actions;
   };
 
-  const allActions = isBasketball
-    ? [...BASKET_SCORED_ACTIONS, ...BASKET_FAULT_ACTIONS]
-    : [...OFFENSIVE_ACTIONS, ...FAULT_ACTIONS];
+  const allActions = [...getScoredActionsForSport(sport), ...getFaultActionsForSport(sport)];
 
   return (
     <div className="space-y-3">
@@ -200,7 +205,8 @@ export function ScoreBoard({
         <div className="flex-1 text-center">
           <div className="flex items-center justify-center gap-1.5">
             <p className={`text-xs font-semibold uppercase tracking-widest ${left === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{teamNames[left]}</p>
-            {!isBasketball && servingTeam === left && <span className="text-[10px]" title="Au service">🏐</span>}
+            {sport === 'volleyball' && servingTeam === left && <span className="text-[10px]" title="Au service">🏐</span>}
+            {(sport === 'tennis' || sport === 'padel') && servingTeam === left && <span className="text-[10px]" title="Au service">🎾</span>}
           </div>
           <p className={`text-5xl font-black tabular-nums ${left === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[left]}</p>
           {menuTeam === left && (
@@ -224,7 +230,8 @@ export function ScoreBoard({
         <div className="flex-1 text-center">
           <div className="flex items-center justify-center gap-1.5">
             <p className={`text-xs font-semibold uppercase tracking-widest ${right === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{teamNames[right]}</p>
-            {!isBasketball && servingTeam === right && <span className="text-[10px]" title="Au service">🏐</span>}
+            {sport === 'volleyball' && servingTeam === right && <span className="text-[10px]" title="Au service">🏐</span>}
+            {(sport === 'tennis' || sport === 'padel') && servingTeam === right && <span className="text-[10px]" title="Au service">🎾</span>}
           </div>
           <p className={`text-5xl font-black tabular-nums ${right === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[right]}</p>
           {menuTeam === right && (
@@ -257,7 +264,7 @@ export function ScoreBoard({
                   menuTab === 'scored' ? 'bg-action-scored text-action-scored-foreground' : 'bg-secondary text-secondary-foreground'
                 }`}
               >
-                ⚡ {isBasketball ? 'Paniers' : 'Points Gagnés'}
+                ⚡ {isBasketball ? 'Paniers' : isTennisOrPadel ? 'Coups Gagnants' : 'Points Gagnés'}
               </button>
               {/* Basketball: actions négatives uniquement pour l'équipe bleue */}
               {(!isBasketball || menuTeam === 'blue') && (
@@ -267,7 +274,7 @@ export function ScoreBoard({
                     menuTab === 'fault' ? 'bg-action-fault text-action-fault-foreground' : 'bg-secondary text-secondary-foreground'
                   }`}
                 >
-                  ❌ {isBasketball ? 'Actions négatives' : 'Fautes Adverses'}
+                  ❌ {isBasketball ? 'Actions négatives' : isTennisOrPadel ? 'Fautes' : 'Fautes Adverses'}
                 </button>
               )}
             </div>
@@ -277,7 +284,7 @@ export function ScoreBoard({
           </div>
           {/* Actions */}
           <div className="grid grid-cols-3 gap-1.5">
-            {(menuTab === 'scored' ? getScoredActions() : getFaultActions()).map(a => (
+            {(menuTab === 'scored' ? getScoredActions() : getFilteredFaultActions()).map(a => (
               <button
                 key={a.key}
                 onClick={() => handleActionSelect(a.key)}
