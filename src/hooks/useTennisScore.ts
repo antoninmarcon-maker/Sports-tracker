@@ -15,9 +15,10 @@ export interface TennisGameState {
 }
 
 function getRallyWinner(point: Point): Team {
-  if (point.type === 'scored') return point.team;
-  // fault: opposite team wins the rally
-  return point.team === 'blue' ? 'red' : 'blue';
+  // point.team always represents the team that benefits from the action.
+  // For 'scored': the team that hit the winner.
+  // For 'fault': the team whose opponent committed the fault.
+  return point.team;
 }
 
 export function computeTennisScore(

@@ -100,6 +100,13 @@ const Index = () => {
     }
   }, [isBasketball, selectedAction, selectedTeam, addFreeThrow]);
 
+  // Tennis/Padel: opponent faults are registered immediately without court click
+  useEffect(() => {
+    if (isTennisOrPadel && matchState.selectedPointType === 'fault' && selectedTeam && selectedAction) {
+      addPoint(0.5, 0.5);
+    }
+  }, [isTennisOrPadel, matchState.selectedPointType, selectedTeam, selectedAction, addPoint]);
+
   useEffect(() => {
     if (!pendingPoint || players.length === 0) return;
     if (isBasketball) {

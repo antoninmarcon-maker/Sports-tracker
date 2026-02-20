@@ -231,8 +231,8 @@ export function TennisCourt({
           {teamNames[rightTeam]}
         </text>
 
-        {/* Point markers */}
-        {points.map((point) => {
+        {/* Point markers (exclude fault points — opponent faults have no court position) */}
+        {points.filter(p => p.type !== 'fault').map((point) => {
           const cx = point.x * W;
           const cy = point.y * H;
           const color = point.team === 'blue' ? 'hsl(217, 91%, 60%)' : 'hsl(0, 84%, 60%)';
