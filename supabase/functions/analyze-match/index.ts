@@ -59,7 +59,32 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const { matchStats, sport } = await req.json();
+    const body = await req.json();
+    const { matchStats, sport } = body;
+
+    // Validate matchStats
+    if (!matchStats || typeof matchStats !== 'string' || matchStats.trim().length === 0) {
+      return new Response(JSON.stringify({ error: 'Invalid or missing matchStats' }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (matchStats.length > 10000) {
+      return new Response(JSON.stringify({ error: 'matchStats too large (max 10000 characters)' }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate sport
+    const allowedSports = ['volleyball', 'basketball', 'tennis', 'padel'];
+    if (sport && (typeof sport !== 'string' || !allowedSports.includes(sport))) {
+      return new Response(JSON.stringify({ error: 'Invalid sport type' }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const systemPrompt = getSystemPrompt(sport || 'volleyball');
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
