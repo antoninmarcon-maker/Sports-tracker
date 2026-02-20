@@ -7,6 +7,8 @@ import { SetHistory } from '@/components/SetHistory';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { BasketballCourt } from '@/components/BasketballCourt';
+import { TennisCourt } from '@/components/TennisCourt';
+import { PadelCourt } from '@/components/PadelCourt';
 import { HeatmapView } from '@/components/HeatmapView';
 
 type Tab = 'match' | 'stats';
@@ -48,7 +50,8 @@ export default function SharedMatch() {
   }
 
   const isBasketball = match.sport === 'basketball';
-  const sportIcon = isBasketball ? '🏀' : '🏐';
+  const sport = match.sport ?? 'volleyball';
+  const sportIcon = sport === 'basketball' ? '🏀' : sport === 'tennis' ? '🎾' : sport === 'padel' ? '🏓' : '🏐';
   const allPoints = [...match.completedSets.flatMap(s => s.points), ...match.points];
   const blueScored = allPoints.filter(p => p.team === 'blue' && p.type === 'scored').length;
   const redScored = allPoints.filter(p => p.team === 'red' && p.type === 'scored').length;
@@ -127,26 +130,14 @@ export default function SharedMatch() {
                 {match.finished ? '✅ Match terminé' : `${isBasketball ? 'QT' : 'Set'} ${match.currentSetNumber} en cours`}
               </p>
             </div>
-            {isBasketball ? (
-              <BasketballCourt
-                points={match.points}
-                selectedTeam={null}
-                selectedAction="attack"
-                selectedPointType="scored"
-                sidesSwapped={match.sidesSwapped}
-                teamNames={match.teamNames}
-                onCourtClick={() => {}}
-              />
+            {sport === 'basketball' ? (
+              <BasketballCourt points={match.points} selectedTeam={null} selectedAction="attack" selectedPointType="scored" sidesSwapped={match.sidesSwapped} teamNames={match.teamNames} onCourtClick={() => {}} />
+            ) : sport === 'tennis' ? (
+              <TennisCourt points={match.points} selectedTeam={null} selectedAction="attack" selectedPointType="scored" sidesSwapped={match.sidesSwapped} teamNames={match.teamNames} onCourtClick={() => {}} />
+            ) : sport === 'padel' ? (
+              <PadelCourt points={match.points} selectedTeam={null} selectedAction="attack" selectedPointType="scored" sidesSwapped={match.sidesSwapped} teamNames={match.teamNames} onCourtClick={() => {}} />
             ) : (
-              <VolleyballCourt
-                points={match.points}
-                selectedTeam={null}
-                selectedAction="attack"
-                selectedPointType="scored"
-                sidesSwapped={match.sidesSwapped}
-                teamNames={match.teamNames}
-                onCourtClick={() => {}}
-              />
+              <VolleyballCourt points={match.points} selectedTeam={null} selectedAction="attack" selectedPointType="scored" sidesSwapped={match.sidesSwapped} teamNames={match.teamNames} onCourtClick={() => {}} />
             )}
           </div>
         ) : (

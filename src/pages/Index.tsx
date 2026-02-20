@@ -5,6 +5,8 @@ import { useMatchState } from '@/hooks/useMatchState';
 import { ScoreBoard } from '@/components/ScoreBoard';
 import { VolleyballCourt } from '@/components/VolleyballCourt';
 import { BasketballCourt } from '@/components/BasketballCourt';
+import { TennisCourt } from '@/components/TennisCourt';
+import { PadelCourt } from '@/components/PadelCourt';
 import { HeatmapView } from '@/components/HeatmapView';
 import { SetHistory } from '@/components/SetHistory';
 import { PlayerRoster } from '@/components/PlayerRoster';
@@ -171,7 +173,7 @@ const Index = () => {
 
   const matchData = getMatch(matchId);
   const isFinished = matchData?.finished ?? false;
-  const sportIcon = isBasketball ? '🏀' : '🏐';
+  const sportIcon = sport === 'basketball' ? '🏀' : sport === 'tennis' ? '🎾' : sport === 'padel' ? '🏓' : '🏐';
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -258,8 +260,28 @@ const Index = () => {
               waitingForNewSet={waitingForNewSet}
               onStartNewSet={startNewSet}
             />
-            {isBasketball ? (
+            {sport === 'basketball' ? (
               <BasketballCourt
+                points={points}
+                selectedTeam={selectedTeam}
+                selectedAction={selectedAction}
+                selectedPointType={selectedPointType}
+                sidesSwapped={sidesSwapped}
+                teamNames={teamNames}
+                onCourtClick={addPoint}
+              />
+            ) : sport === 'tennis' ? (
+              <TennisCourt
+                points={points}
+                selectedTeam={selectedTeam}
+                selectedAction={selectedAction}
+                selectedPointType={selectedPointType}
+                sidesSwapped={sidesSwapped}
+                teamNames={teamNames}
+                onCourtClick={addPoint}
+              />
+            ) : sport === 'padel' ? (
+              <PadelCourt
                 points={points}
                 selectedTeam={selectedTeam}
                 selectedAction={selectedAction}
