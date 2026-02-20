@@ -283,9 +283,15 @@ export default function Home() {
         {customLogo ? (
           <img src={customLogo} alt="Logo" className="w-16 h-16 rounded-full object-cover" />
         ) : (
-          <Link to="/settings#logo" className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-secondary/50 hover:bg-secondary hover:border-primary/50 transition-all group" title={t('home.customizeLogo')}>
-            <ImagePlus size={20} className="text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
-          </Link>
+          user ? (
+            <Link to="/settings#logo" className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-secondary/50 hover:bg-secondary hover:border-primary/50 transition-all group" title={t('home.customizeLogo')}>
+              <ImagePlus size={20} className="text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
+            </Link>
+          ) : (
+            <button onClick={() => setShowAuth(true)} className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center bg-secondary/50 hover:bg-secondary hover:border-primary/50 transition-all group" title={t('home.customizeLogo')}>
+              <ImagePlus size={20} className="text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
+            </button>
+          )
         )}
         <div>
           <h1 className="text-2xl font-black text-foreground tracking-tight text-center">{t('home.title')}</h1>
