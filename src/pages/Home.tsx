@@ -257,7 +257,7 @@ export default function Home() {
 
   return (
     <div className="min-h-dvh bg-background flex flex-col">
-      <header className="px-4 py-6 border-b border-border flex flex-col items-center gap-3 relative">
+      <header className="sticky top-0 z-40 bg-background px-4 py-6 pt-[max(1.5rem,env(safe-area-inset-top))] border-b border-border flex flex-col items-center gap-3 relative">
         <div className="absolute top-4 left-4">
           <Link
             to="/help"

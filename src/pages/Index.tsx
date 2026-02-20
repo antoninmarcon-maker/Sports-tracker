@@ -173,7 +173,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-40 bg-background px-4 py-3 border-b border-border flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-background px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-border flex items-center justify-between">
         <button
           onClick={() => navigate('/')}
           className="p-1.5 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
