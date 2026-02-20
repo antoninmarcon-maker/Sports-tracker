@@ -672,7 +672,7 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
         </DropdownMenu>
       </div>
 
-      <p className="text-[8px] text-muted-foreground/50 text-center">My Volley · my-volley.com</p>
+      
     </div>
   );
 }
