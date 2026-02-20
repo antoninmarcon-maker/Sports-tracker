@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -8,6 +8,7 @@ export default function Help() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState('');
   const [sending, setSending] = useState(false);
+  const feedbackRef = useRef<HTMLElement>(null);
 
   const handleFeedback = async () => {
     if (!feedbackMsg.trim()) return;
@@ -122,9 +123,14 @@ export default function Help() {
         </section>
 
         {/* Feedback button - always visible */}
-        <section className="pb-6">
+        <section className="pb-6" id="feedback" ref={feedbackRef}>
           <button
-            onClick={() => setFeedbackOpen(!feedbackOpen)}
+            onClick={() => {
+              setFeedbackOpen(prev => {
+                if (!prev) setTimeout(() => feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 100);
+                return !prev;
+              });
+            }}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm"
           >
             <MessageSquare size={16} /> Laisser un feedback
