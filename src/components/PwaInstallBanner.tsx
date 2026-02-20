@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { X, Download } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type Platform = 'ios' | 'android' | 'standalone' | 'other';
 
 function detectPlatform(): Platform {
-  // Already installed as PWA
   if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone) {
     return 'standalone';
   }
@@ -15,16 +15,13 @@ function detectPlatform(): Platform {
 }
 
 export function PwaInstallBanner() {
+  const { t } = useTranslation();
   const [platform, setPlatform] = useState<Platform>('other');
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    const p = detectPlatform();
-    setPlatform(p);
-    // Check if user already dismissed
-    if (sessionStorage.getItem('pwa-banner-dismissed')) {
-      setDismissed(true);
-    }
+    setPlatform(detectPlatform());
+    if (sessionStorage.getItem('pwa-banner-dismissed')) setDismissed(true);
   }, []);
 
   const handleDismiss = () => {
@@ -32,7 +29,6 @@ export function PwaInstallBanner() {
     sessionStorage.setItem('pwa-banner-dismissed', '1');
   };
 
-  // Don't show if already installed, desktop, or dismissed
   if (platform === 'standalone' || platform === 'other' || dismissed) return null;
 
   return (
@@ -41,17 +37,12 @@ export function PwaInstallBanner() {
         <Download size={18} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground">Installer l'application</p>
+        <p className="text-sm font-semibold text-foreground">{t('pwa.installApp')}</p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {platform === 'ios'
-            ? "Appuyez sur le bouton « Partager » ⎙ puis « Sur l'écran d'accueil » pour installer l'app."
-            : "Appuyez sur les trois points ⋮ puis « Installer l'application » pour un accès rapide."}
+          {platform === 'ios' ? t('pwa.iosInstall') : t('pwa.androidInstall')}
         </p>
       </div>
-      <button
-        onClick={handleDismiss}
-        className="p-1 rounded-full text-muted-foreground hover:text-foreground shrink-0"
-      >
+      <button onClick={handleDismiss} className="p-1 rounded-full text-muted-foreground hover:text-foreground shrink-0">
         <X size={16} />
       </button>
     </div>

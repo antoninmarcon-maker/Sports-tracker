@@ -3,20 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export default function ResetPassword() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Check for recovery token in hash
     const hash = window.location.hash;
     if (hash.includes('type=recovery')) {
       setReady(true);
     } else {
-      // Try to detect session
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) setReady(true);
         else navigate('/');
@@ -26,7 +26,7 @@ export default function ResetPassword() {
 
   const handleReset = async () => {
     if (password.length < 6) {
-      toast.error('Le mot de passe doit contenir au moins 6 caractères.');
+      toast.error(t('resetPassword.minLength'));
       return;
     }
     setLoading(true);
@@ -35,7 +35,7 @@ export default function ResetPassword() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success('Mot de passe mis à jour !');
+      toast.success(t('resetPassword.updated'));
       navigate('/');
     }
   };
@@ -45,21 +45,10 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="bg-card rounded-2xl p-6 max-w-sm w-full border border-border space-y-4">
-        <h1 className="text-lg font-bold text-foreground text-center">Nouveau mot de passe</h1>
-        <Input
-          type="password"
-          placeholder="Nouveau mot de passe (min 6 car.)"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="h-10"
-          onKeyDown={e => e.key === 'Enter' && handleReset()}
-        />
-        <button
-          onClick={handleReset}
-          disabled={loading}
-          className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50"
-        >
-          {loading ? '...' : 'Mettre à jour'}
+        <h1 className="text-lg font-bold text-foreground text-center">{t('resetPassword.title')}</h1>
+        <Input type="password" placeholder={t('resetPassword.placeholder')} value={password} onChange={e => setPassword(e.target.value)} className="h-10" onKeyDown={e => e.key === 'Enter' && handleReset()} />
+        <button onClick={handleReset} disabled={loading} className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50">
+          {loading ? '...' : t('resetPassword.update')}
         </button>
       </div>
     </div>

@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, MessageSquare, ShieldCheck, UserRound, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, MessageSquare, ShieldCheck, UserRound, Loader2, Globe } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import type { User } from '@supabase/supabase-js';
 
 export default function Settings() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +42,6 @@ export default function Settings() {
       setUser(u);
       setDisplayName(u.user_metadata?.full_name || '');
 
-      // Load profile from profiles table
       const { data: profile } = await supabase
         .from('profiles')
         .select('display_name, club')
@@ -59,20 +61,16 @@ export default function Settings() {
     if (!user) return;
     setSavingProfile(true);
     try {
-      // Upsert profile
       const { error } = await supabase.from('profiles').upsert(
         { user_id: user.id, display_name: displayName.trim(), club: club.trim() },
         { onConflict: 'user_id' }
       );
       if (error) throw error;
-
-      // Also update auth metadata for display name
       await supabase.auth.updateUser({ data: { full_name: displayName.trim() } });
-
-      toast.success('Profil mis à jour !');
+      toast.success(t('settings.profileUpdated'));
     } catch (err: any) {
       console.error('[Settings] Save profile error:', err);
-      toast.error(err.message || 'Erreur lors de la sauvegarde.');
+      toast.error(err.message || t('settings.saveError'));
     } finally {
       setSavingProfile(false);
     }
@@ -80,11 +78,11 @@ export default function Settings() {
 
   const handleChangePassword = async () => {
     if (newPassword.length < 6) {
-      toast.error('Le mot de passe doit contenir au moins 6 caractères.');
+      toast.error(t('settings.passwordMinLength'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error('Les mots de passe ne correspondent pas.');
+      toast.error(t('settings.passwordMismatch'));
       return;
     }
     setSavingPassword(true);
@@ -93,7 +91,7 @@ export default function Settings() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success('Mot de passe mis à jour !');
+      toast.success(t('settings.passwordUpdated'));
       setNewPassword('');
       setConfirmPassword('');
     }
@@ -109,14 +107,18 @@ export default function Settings() {
         message: feedbackMsg.trim(),
       });
       if (error) throw error;
-      toast.success('Merci pour votre retour !');
+      toast.success(t('settings.feedbackSent'));
       setFeedbackMsg('');
     } catch (err: any) {
       console.error('[Settings] Feedback error:', err);
-      toast.error(err.message || 'Erreur inattendue.');
+      toast.error(err.message || t('settings.feedbackError'));
     } finally {
       setSendingFeedback(false);
     }
+  };
+
+  const handleLanguageChange = (lang: string) => {
+    i18n.changeLanguage(lang);
   };
 
   if (loading) {
@@ -133,120 +135,102 @@ export default function Settings() {
         <Link to="/" className="p-1.5 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft size={18} />
         </Link>
-        <h1 className="text-lg font-bold text-foreground">Paramètres</h1>
+        <h1 className="text-lg font-bold text-foreground">{t('settings.title')}</h1>
       </header>
 
       <main className="max-w-lg mx-auto p-4 space-y-4">
-        {/* Section 1: Profile */}
+        {/* Language */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Globe size={18} className="text-primary" />
+              {t('settings.language')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">{t('settings.languageLabel')}</label>
+              <Select value={i18n.language?.startsWith('fr') ? 'fr' : 'en'} onValueChange={handleLanguageChange}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fr">🇫🇷 {t('settings.french')}</SelectItem>
+                  <SelectItem value="en">🇬🇧 {t('settings.english')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Profile */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <UserRound size={18} className="text-primary" />
-              Profil utilisateur
+              {t('settings.profile')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">{user?.email}</p>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground">Nom d'affichage</label>
-              <Input
-                value={displayName}
-                onChange={e => setDisplayName(e.target.value)}
-                placeholder="Votre nom"
-                className="h-9"
-                maxLength={100}
-              />
+              <label className="text-xs font-semibold text-muted-foreground">{t('settings.displayName')}</label>
+              <Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder={t('settings.displayNamePlaceholder')} className="h-9" maxLength={100} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground">Club de sport</label>
-              <Input
-                value={club}
-                onChange={e => setClub(e.target.value)}
-                placeholder="Ex : Capbreton Volley"
-                className="h-9"
-                maxLength={100}
-              />
+              <label className="text-xs font-semibold text-muted-foreground">{t('settings.club')}</label>
+              <Input value={club} onChange={e => setClub(e.target.value)} placeholder={t('settings.clubPlaceholder')} className="h-9" maxLength={100} />
             </div>
-            <button
-              onClick={handleSaveProfile}
-              disabled={savingProfile}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50"
-            >
+            <button onClick={handleSaveProfile} disabled={savingProfile} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50">
               {savingProfile ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-              Enregistrer les modifications
+              {t('settings.saveChanges')}
             </button>
           </CardContent>
         </Card>
 
-        {/* Section 2: Security */}
+        {/* Security */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <ShieldCheck size={18} className="text-primary" />
-              Sécurité et mot de passe
+              {t('settings.security')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isOAuthUser ? (
               <div className="text-sm text-muted-foreground bg-secondary rounded-lg p-3">
-                ⚠️ La gestion du mot de passe n'est pas disponible pour les comptes connectés via Google ou Apple.
+                {t('settings.oauthPasswordWarning')}
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground">Nouveau mot de passe</label>
-                  <Input
-                    type="password"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    placeholder="Min. 6 caractères"
-                    className="h-9"
-                  />
+                  <label className="text-xs font-semibold text-muted-foreground">{t('settings.newPassword')}</label>
+                  <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder={t('settings.newPasswordPlaceholder')} className="h-9" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground">Confirmer le mot de passe</label>
-                  <Input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    placeholder="Confirmez le mot de passe"
-                    className="h-9"
-                  />
+                  <label className="text-xs font-semibold text-muted-foreground">{t('settings.confirmPassword')}</label>
+                  <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder={t('settings.confirmPasswordPlaceholder')} className="h-9" />
                 </div>
-                <button
-                  onClick={handleChangePassword}
-                  disabled={savingPassword || !newPassword.trim()}
-                  className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50"
-                >
-                  {savingPassword ? 'Mise à jour…' : 'Mettre à jour le mot de passe'}
+                <button onClick={handleChangePassword} disabled={savingPassword || !newPassword.trim()} className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50">
+                  {savingPassword ? t('settings.updatingPassword') : t('settings.updatePassword')}
                 </button>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Section 3: Feedback */}
+        {/* Feedback */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <MessageSquare size={18} className="text-primary" />
-              Support et feedback
+              {t('settings.support')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <textarea
-              value={feedbackMsg}
-              onChange={e => setFeedbackMsg(e.target.value)}
-              placeholder="Dites-nous ce que vous pensez, ce qui pourrait être amélioré…"
-              className="w-full min-h-[100px] rounded-lg border border-border bg-background p-3 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
-              maxLength={2000}
-            />
-            <button
-              onClick={handleSendFeedback}
-              disabled={sendingFeedback || !feedbackMsg.trim()}
-              className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50"
-            >
-              {sendingFeedback ? 'Envoi…' : 'Envoyer le feedback'}
+            <textarea value={feedbackMsg} onChange={e => setFeedbackMsg(e.target.value)} placeholder={t('settings.feedbackPlaceholder')} className="w-full min-h-[100px] rounded-lg border border-border bg-background p-3 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/30" maxLength={2000} />
+            <button onClick={handleSendFeedback} disabled={sendingFeedback || !feedbackMsg.trim()} className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50">
+              {sendingFeedback ? t('common.sending') : t('settings.sendFeedback')}
             </button>
           </CardContent>
         </Card>
