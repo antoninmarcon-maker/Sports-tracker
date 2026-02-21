@@ -471,7 +471,7 @@
     "description": "Masquez les actions par défaut ou créez vos propres actions. Les actions personnalisées sont enregistrées sous la catégorie « Autre » pour préserver la compatibilité.",
     "scored": "⚡ Points gagnés",
     "faults": "❌ Fautes",
-    "neutral": "📊 Neutres",
+    "neutral": "📊 Faits de jeu",
     "addAction": "Ajouter",
     "newActionPlaceholder": "Nom de l'action",
     "sigilPlaceholder": "Sigil",
