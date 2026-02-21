@@ -99,6 +99,10 @@ export function useMatchState(matchId: string, ready: boolean = true) {
     // Read and clear pending custom action label
     const customLabel = (window as any).__pendingCustomActionLabel;
     if (customLabel) delete (window as any).__pendingCustomActionLabel;
+    const customSigil = (window as any).__pendingCustomSigil;
+    if (customSigil) delete (window as any).__pendingCustomSigil;
+    const customShowOnCourt = (window as any).__pendingCustomShowOnCourt;
+    if (customShowOnCourt !== undefined) delete (window as any).__pendingCustomShowOnCourt;
     const point: Point = {
       id: crypto.randomUUID(),
       team: selectedTeam,
@@ -109,9 +113,11 @@ export function useMatchState(matchId: string, ready: boolean = true) {
       timestamp: Date.now(),
       pointValue,
       ...(customLabel ? { customActionLabel: customLabel } : {}),
+      ...(customSigil ? { sigil: customSigil } : {}),
+      ...(customShowOnCourt ? { showOnCourt: true } : {}),
     };
-    // Show player selector for blue team actions + red team fault points (blue committed the fault)
-    if (players.length > 0 && (point.team === 'blue' || (point.team === 'red' && point.type === 'fault'))) {
+    // Show player selector for blue team actions + red team fault points + neutral points
+    if (players.length > 0 && (point.type === 'neutral' || point.team === 'blue' || (point.team === 'red' && point.type === 'fault'))) {
       setPendingPoint(point);
     } else {
       setPoints(prev => [...prev, point]);
@@ -163,25 +169,27 @@ export function useMatchState(matchId: string, ready: boolean = true) {
     setPoints(prev => prev.slice(0, -1));
   }, []);
 
-  // Score calculation: basketball uses pointValue, volleyball uses count
+  // Score calculation: basketball uses pointValue, volleyball uses count — always exclude neutral
   const score = useMemo(() => {
+    const scoringPoints = points.filter(p => p.type !== 'neutral');
     if (sport === 'basketball') {
       return {
-        blue: points.filter(p => p.team === 'blue' && p.type === 'scored').reduce((sum, p) => sum + (p.pointValue ?? 0), 0),
-        red: points.filter(p => p.team === 'red' && p.type === 'scored').reduce((sum, p) => sum + (p.pointValue ?? 0), 0),
+        blue: scoringPoints.filter(p => p.team === 'blue' && p.type === 'scored').reduce((sum, p) => sum + (p.pointValue ?? 0), 0),
+        red: scoringPoints.filter(p => p.team === 'red' && p.type === 'scored').reduce((sum, p) => sum + (p.pointValue ?? 0), 0),
       };
     }
     return {
-      blue: points.filter(p => p.team === 'blue').length,
-      red: points.filter(p => p.team === 'red').length,
+      blue: scoringPoints.filter(p => p.team === 'blue').length,
+      red: scoringPoints.filter(p => p.team === 'red').length,
     };
   }, [points, sport]);
 
-  // Serving team (volleyball only)
+  // Serving team (volleyball only) — ignore neutral points
   const servingTeam: Team | null = useMemo(() => {
     if (sport !== 'volleyball') return null;
-    if (points.length === 0) return null;
-    return points[points.length - 1].team;
+    const scoringPts = points.filter(p => p.type !== 'neutral');
+    if (scoringPts.length === 0) return null;
+    return scoringPts[scoringPts.length - 1].team;
   }, [points, sport]);
 
   const stats = useMemo(() => {

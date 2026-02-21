@@ -95,7 +95,7 @@ const Index = () => {
     return (completedSets.length % 2 === 0) ? initialServer : otherTeam;
   }, [initialServer, completedSets.length]);
 
-  const tennisScore = useTennisScore(isTennisOrPadel ? points : [], metadata, currentSetInitialServer);
+  const tennisScore = useTennisScore(isTennisOrPadel ? points.filter(p => p.type !== 'neutral') : [], metadata, currentSetInitialServer);
   const effectiveServingTeam = isTennisOrPadel ? tennisScore.servingTeam : servingTeam;
 
   // Helper: get players belonging to a specific team (for racket sports)
@@ -357,6 +357,18 @@ const Index = () => {
         )}
 
         {pendingPoint && players.length > 0 && (() => {
+          // Neutral points: always show player selector
+          if (pendingPoint.type === 'neutral') {
+            return (
+              <PlayerSelector
+                players={players}
+                prompt={t('playerSelector.whoScored')}
+                onSelect={assignPlayer}
+                onSkip={skipPlayerAssignment}
+              />
+            );
+          }
+
           if (isBasketball) {
             const isBlueFault = pendingPoint.team === 'blue' && pendingPoint.type === 'fault';
             const isBlueScored = pendingPoint.team === 'blue' && pendingPoint.type === 'scored';

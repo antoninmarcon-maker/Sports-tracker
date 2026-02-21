@@ -367,6 +367,7 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
   }, [matchId, isLoggedIn, t]);
 
   const heatmapPoints = useMemo(() => {
+    // Exclude neutral points from heatmap
     const scoredOnly = filteredPoints.filter(p => p.type === 'scored');
     return scoredOnly.map(p => {
       const isBlue = p.team === 'blue';

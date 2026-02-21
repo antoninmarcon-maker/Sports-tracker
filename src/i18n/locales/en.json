@@ -246,7 +246,8 @@
     "faultBasket": "Negative Actions",
     "scoredTennis": "Winners",
     "faultTennis": "Opponent Faults",
-    "whoServes": "Who serves first?"
+    "whoServes": "Who serves first?",
+    "neutralTab": "Stats"
   },
   "roster": {
     "defineRoster": "Set roster {{team}}",
@@ -470,13 +471,22 @@
     "description": "Hide default actions or create your own. Custom actions are stored under the \"Other\" category for compatibility.",
     "scored": "⚡ Points won",
     "faults": "❌ Faults",
+    "neutral": "📊 Neutral",
     "addAction": "Add",
     "newActionPlaceholder": "Action name",
+    "sigilPlaceholder": "Sigil",
+    "showOnCourt": "Court",
     "show": "Show",
     "hide": "Hide",
     "volleyball": "Volley",
     "basketball": "Basket",
     "tennis": "Tennis",
     "padel": "Padel"
+  },
+  "notifications": {
+    "promptTitle": "Don't miss any stat 🔔",
+    "promptText": "Enable notifications to receive daily analysis tips and match reminders.",
+    "later": "Later",
+    "enable": "Enable"
   }
 }

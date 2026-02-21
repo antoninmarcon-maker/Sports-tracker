@@ -13,7 +13,7 @@ interface PlayerStatsProps {
 export function PlayerStats({ points, players, teamName, sport = 'volleyball' }: PlayerStatsProps) {
   const { t } = useTranslation();
   const [expandedPlayers, setExpandedPlayers] = useState<Record<string, boolean>>({});
-  const [expandedSections, setExpandedSections] = useState<Record<string, { scored?: boolean; faults?: boolean }>>({});
+  const [expandedSections, setExpandedSections] = useState<Record<string, { scored?: boolean; faults?: boolean; neutral?: boolean }>>({});
   const isBasketball = sport === 'basketball';
   const [sectionOpen, setSectionOpen] = useState(true);
 
@@ -23,6 +23,7 @@ export function PlayerStats({ points, players, teamName, sport = 'volleyball' }:
       const scored = playerPoints.filter(p => p.team === 'blue' && p.type === 'scored');
       const faultWins = playerPoints.filter(p => p.team === 'blue' && p.type === 'fault');
       const negatives = playerPoints.filter(p => p.team === 'red');
+      const neutrals = playerPoints.filter(p => p.type === 'neutral');
 
       // Basketball: faults by blue team are negative (missed shots, turnovers, fouls)
       // Other sports: faults by blue team are positive (opponent errors attributed to player)
@@ -36,7 +37,6 @@ export function PlayerStats({ points, players, teamName, sport = 'volleyball' }:
 
       const faultBreakdown: { label: string; count: number }[] = [];
       if (isBasketball) {
-        // Show blue team faults (own errors) and red team negatives
         for (const a of BASKET_FAULT_ACTIONS) {
           const count = playerFaults.filter(p => p.action === a.key).length;
           if (count > 0) faultBreakdown.push({ label: a.label, count });
@@ -73,14 +73,28 @@ export function PlayerStats({ points, players, teamName, sport = 'volleyball' }:
         scoredBreakdown.push({ label: t('playerStats.faultsLabel'), count: faultWins.length });
       }
 
+      // Neutral breakdown
+      const neutralBreakdown: { label: string; count: number }[] = [];
+      const neutralLabels = new Map<string, string>();
+      neutrals.forEach(p => {
+        const label = p.customActionLabel || p.action;
+        neutralLabels.set(label, label);
+      });
+      neutralLabels.forEach(label => {
+        const count = neutrals.filter(p => (p.customActionLabel || p.action) === label).length;
+        neutralBreakdown.push({ label, count });
+      });
+
       return {
         player,
         scored: scoredCount,
         faults: negativeCount,
-        total,
+        neutralCount: neutrals.length,
+        total: total + neutrals.length,
         efficiency,
         scoredBreakdown,
         faultBreakdown,
+        neutralBreakdown,
       };
     }).filter(s => s.total > 0)
       .sort((a, b) => b.scored - a.scored);
@@ -90,7 +104,7 @@ export function PlayerStats({ points, players, teamName, sport = 'volleyball' }:
     setExpandedPlayers(prev => ({ ...prev, [playerId]: !prev[playerId] }));
   };
 
-  const toggleSection = (playerId: string, section: 'scored' | 'faults') => {
+  const toggleSection = (playerId: string, section: 'scored' | 'faults' | 'neutral') => {
     setExpandedSections(prev => {
       const current = prev[playerId] || {};
       return { ...prev, [playerId]: { ...current, [section]: !current[section] } };
@@ -124,7 +138,7 @@ export function PlayerStats({ points, players, teamName, sport = 'volleyball' }:
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-black text-team-blue bg-team-blue/10 rounded px-1.5 py-0.5">{s.player.name || '—'}</span>
-                    <span className="text-[10px] text-muted-foreground">{s.scored} {t('playerStats.pts')} / {s.faults} {t('playerStats.fts')}</span>
+                    <span className="text-[10px] text-muted-foreground">{s.scored} {t('playerStats.pts')} / {s.faults} {t('playerStats.fts')}{s.neutralCount > 0 ? ` / ${s.neutralCount} 📊` : ''}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${s.efficiency >= 60 ? 'bg-green-500/10 text-green-500' : s.efficiency >= 40 ? 'bg-yellow-500/10 text-yellow-500' : 'bg-destructive/10 text-destructive'}`}>
@@ -159,6 +173,17 @@ export function PlayerStats({ points, players, teamName, sport = 'volleyball' }:
                           {sections.faults ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                         </button>
                       )}
+                      {s.neutralCount > 0 && (
+                        <button
+                          onClick={() => toggleSection(s.player.id, 'neutral')}
+                          className={`flex-1 flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                            sections.neutral ? 'bg-muted/50 text-foreground' : 'bg-muted/20 text-muted-foreground hover:bg-muted/30'
+                          }`}
+                        >
+                          <span>📊 {s.neutralCount}</span>
+                          {sections.neutral ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                        </button>
+                      )}
                     </div>
 
                     {sections.scored && s.scoredBreakdown.length > 0 && (
@@ -172,6 +197,16 @@ export function PlayerStats({ points, players, teamName, sport = 'volleyball' }:
                       </div>
                     )}
 
+                    {sections.neutral && s.neutralBreakdown.length > 0 && (
+                      <div className="pl-2 space-y-0.5">
+                        {s.neutralBreakdown.map(b => (
+                          <div key={b.label} className="flex justify-between text-[11px]">
+                            <span className="text-muted-foreground">{b.label}</span>
+                            <span className="font-bold text-foreground">{b.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {sections.faults && s.faultBreakdown.length > 0 && (
                       <div className="pl-2 space-y-0.5">
                         {s.faultBreakdown.map(b => (

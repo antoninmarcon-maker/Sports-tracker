@@ -304,8 +304,8 @@ export function TennisCourt({
           {teamNames[rightTeam]}
         </text>
 
-        {/* Point markers (exclude fault points — opponent faults have no court position) */}
-        {points.filter(p => p.type !== 'fault').map((point) => {
+        {/* Point markers (exclude fault & neutral points) */}
+        {points.filter(p => p.type !== 'fault' && p.type !== 'neutral').map((point) => {
           const cx = point.x * W;
           const cy = point.y * H;
           const color = point.team === 'blue' ? 'hsl(217, 91%, 60%)' : 'hsl(0, 84%, 60%)';
@@ -323,6 +323,20 @@ export function TennisCourt({
               />
               {label && (
                 <text x={cx} y={cy + 4} textAnchor="middle" fill={isFault ? color : 'white'} fontSize="9" fontWeight="bold">{label}</text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Neutral point markers */}
+        {points.filter(p => p.type === 'neutral' && p.showOnCourt).map((point) => {
+          const cx = point.x * W;
+          const cy = point.y * H;
+          return (
+            <g key={point.id} className="animate-point-drop">
+              <circle cx={cx} cy={cy} r={8} fill="hsl(var(--muted))" opacity={0.7} stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} />
+              {point.sigil && (
+                <text x={cx} y={cy + 3.5} textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="8" fontWeight="bold">{point.sigil}</text>
               )}
             </g>
           );
