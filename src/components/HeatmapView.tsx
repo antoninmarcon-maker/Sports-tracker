@@ -213,7 +213,13 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
     const bg = document.createElementNS(svgNS, 'rect');
     bg.setAttribute('x', '0'); bg.setAttribute('y', '40');
     bg.setAttribute('width', '600'); bg.setAttribute('height', '400');
-    bg.setAttribute('fill', isBasket ? 'hsl(30, 50%, 35%)' : 'hsl(142, 40%, 28%)');
+    const courtFills: Record<string, string> = {
+      volleyball: 'hsl(142, 40%, 28%)',
+      basketball: 'hsl(30, 50%, 35%)',
+      tennis: 'hsl(15, 60%, 40%)',
+      padel: 'hsl(210, 55%, 30%)',
+    };
+    bg.setAttribute('fill', courtFills[sport] || courtFills.volleyball);
     svg.appendChild(bg);
 
     const border = document.createElementNS(svgNS, 'rect');
@@ -381,7 +387,13 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
     const height = canvas.height;
 
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = 'hsl(142, 40%, 28%)';
+    const courtColors: Record<SportType, string> = {
+      volleyball: 'hsl(142, 40%, 28%)',
+      basketball: 'hsl(30, 50%, 35%)',
+      tennis: 'hsl(15, 60%, 40%)',
+      padel: 'hsl(210, 55%, 30%)',
+    };
+    ctx.fillStyle = courtColors[sport] || courtColors.volleyball;
     ctx.beginPath();
     ctx.roundRect(0, 0, width, height, 8);
     ctx.fill();
