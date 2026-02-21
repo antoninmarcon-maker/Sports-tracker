@@ -78,6 +78,7 @@ export function ScoreBoard({
   const handleActionSelect = (action: ActionType) => {
     if (!menuTeam) return;
     const type: PointType = menuTab === 'scored' ? 'scored' : 'fault';
+    // menuTeam is the Winner of the point (we clicked + on their side)
     onSelectAction(menuTeam, type, action);
     setMenuTeam(null);
   };
@@ -108,12 +109,25 @@ export function ScoreBoard({
   const getFilteredFaultActions = () => {
     const actions = getFaultActionsForSport(sport);
     if (!servingTeam || !menuTeam) return actions;
-    // For volleyball: hide service_miss for non-receiving team (existing logic inverted)
-    // For all sports: hide service faults (double_fault, etc.) when this team is NOT serving
+
+    // Logic: menuTeam is the one getting the point.
+    // So the fault is committed by the OPPONENT.
+    const opponent = menuTeam === 'blue' ? 'red' : 'blue';
+    const faultingTeam = opponent;
+
+    // Filter based on who is committing the fault (faultingTeam)
     return actions.filter(a => {
-      if (SERVICE_FAULT_ACTIONS.includes(a.key) && servingTeam !== menuTeam) return false;
-      // Volleyball: service_miss is an opponent fault, hide from serving team
-      if (a.key === 'service_miss' && sport === 'volleyball' && servingTeam === menuTeam) return false;
+      // Hide service faults if the faulting team is NOT the serving team
+      if (SERVICE_FAULT_ACTIONS.includes(a.key) && faultingTeam !== servingTeam) return false;
+      
+      // Volleyball specific: service_miss is an opponent fault. 
+      // If faultingTeam is serving, they can do a service_miss.
+      // Wait, 'service_miss' in volleyball IS a fault by the server.
+      // So if faultingTeam === servingTeam, show it.
+      // My previous logic was: if (a.key === 'service_miss' && sport === 'volleyball' && servingTeam === menuTeam) return false;
+      // Here faultingTeam is the one doing the action.
+      // If faultingTeam is serving, they can miss service.
+      
       return true;
     });
   };
