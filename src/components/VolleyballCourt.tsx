@@ -275,8 +275,8 @@ export function VolleyballCourt({ points, selectedTeam, selectedAction, selected
           {teamNames[bottomTeam]}
         </text>
 
-        {/* Point markers (exclude service_miss — auto-registered without court position) */}
-        {points.filter(p => p.action !== 'service_miss').map((point) => {
+        {/* Point markers (exclude service_miss and neutral without showOnCourt) */}
+        {points.filter(p => p.action !== 'service_miss' && p.type !== 'neutral').map((point) => {
           const cx = point.x * 600;
           const cy = point.y * 400;
           const color = point.team === 'blue' ? 'hsl(217, 91%, 60%)' : 'hsl(0, 84%, 60%)';
@@ -302,6 +302,20 @@ export function VolleyballCourt({ points, selectedTeam, selectedAction, selected
               )}
               {actionLetter && (
                 <text x={cx} y={cy + 4} textAnchor="middle" fill={isFault ? color : 'white'} fontSize="10" fontWeight="bold">{actionLetter}</text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Neutral point markers (only if showOnCourt) */}
+        {points.filter(p => p.type === 'neutral' && p.showOnCourt).map((point) => {
+          const cx = point.x * 600;
+          const cy = point.y * 400;
+          return (
+            <g key={point.id} className="animate-point-drop">
+              <circle cx={cx} cy={cy} r={8} fill="hsl(var(--muted))" opacity={0.7} stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} />
+              {point.sigil && (
+                <text x={cx} y={cy + 3.5} textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="8" fontWeight="bold">{point.sigil}</text>
               )}
             </g>
           );

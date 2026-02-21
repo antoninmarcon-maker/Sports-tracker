@@ -1,8 +1,8 @@
 import { Undo2, RotateCcw, Flag, ArrowLeftRight, Play, Pause, Timer, Pencil, Plus, X, ChevronDown } from 'lucide-react';
-import { Team, PointType, ActionType, SportType, Point, MatchMetadata, getScoredActionsForSport, getFaultActionsForSport, getPeriodLabel } from '@/types/sports';
+import { Team, PointType, ActionType, SportType, Point, MatchMetadata, getScoredActionsForSport, getFaultActionsForSport, getNeutralActionsForSport, getPeriodLabel } from '@/types/sports';
 import { getVisibleActions } from '@/lib/actionsConfig';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTennisScore } from '@/hooks/useTennisScore';
 import { useTranslation } from 'react-i18next';
 
@@ -43,7 +43,7 @@ function formatTime(seconds: number) {
   return `${m}:${s}`;
 }
 
-type MenuTab = 'scored' | 'fault';
+type MenuTab = 'scored' | 'fault' | 'neutral';
 
 export function ScoreBoard({
   score, points, selectedTeam, selectedAction,
@@ -64,7 +64,7 @@ export function ScoreBoard({
   const isTennisOrPadel = sport === 'tennis' || sport === 'padel';
   const periodLabel = getPeriodLabel(sport);
 
-  const tennisScore = useTennisScore(isTennisOrPadel ? points : [], metadata);
+  const tennisScore = useTennisScore(isTennisOrPadel ? points.filter(p => p.type !== 'neutral') : [], metadata);
 
   const left: Team = sidesSwapped ? 'red' : 'blue';
   const right: Team = sidesSwapped ? 'blue' : 'red';
@@ -77,13 +77,18 @@ export function ScoreBoard({
     setEditingNames(false);
   };
 
-  const handleActionSelect = (action: ActionType, customLabel?: string) => {
+  const handleActionSelect = (action: ActionType, customLabel?: string, sigil?: string, showOnCourt?: boolean) => {
     if (!menuTeam) return;
-    const type: PointType = menuTab === 'scored' ? 'scored' : 'fault';
-    // menuTeam is the Winner of the point (we clicked + on their side)
+    const type: PointType = menuTab;
     onSelectAction(menuTeam, type, action);
     if (customLabel) {
       (window as any).__pendingCustomActionLabel = customLabel;
+    }
+    if (sigil) {
+      (window as any).__pendingCustomSigil = sigil;
+    }
+    if (showOnCourt) {
+      (window as any).__pendingCustomShowOnCourt = true;
     }
     setMenuTeam(null);
   };
@@ -125,7 +130,14 @@ export function ScoreBoard({
     });
   };
 
-  const allActions = [...getScoredActionsForSport(sport), ...getFaultActionsForSport(sport)];
+  const allActions = [...getScoredActionsForSport(sport), ...getFaultActionsForSport(sport), ...getNeutralActionsForSport(sport)];
+
+  // Check if there are visible neutral actions for the current sport
+  const hasNeutralActions = useMemo(() => {
+    const neutralDefaults = getNeutralActionsForSport(sport);
+    const neutralVisible = getVisibleActions(sport, 'neutral', neutralDefaults);
+    return neutralVisible.length > 0;
+  }, [sport]);
 
   const getScoredLabel = () => {
     if (isBasketball) return t('scoreboard.scoredBasket');
@@ -396,23 +408,41 @@ export function ScoreBoard({
                   ❌ {getFaultLabel()}
                 </button>
               )}
+              {hasNeutralActions && (
+                <button
+                  onClick={() => setMenuTab('neutral')}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                    menuTab === 'neutral' ? 'bg-muted text-foreground' : 'bg-secondary text-secondary-foreground'
+                  }`}
+                >
+                  📊 {t('scoreboard.neutralTab')}
+                </button>
+              )}
             </div>
             <button onClick={closeMenu} className="p-1 rounded-md text-muted-foreground hover:text-foreground">
               <X size={16} />
             </button>
           </div>
           <div className="grid grid-cols-3 gap-1.5">
-            {(menuTab === 'scored' ? getScoredActions() : getFilteredFaultActions()).map(a => (
+            {(menuTab === 'scored'
+              ? getScoredActions()
+              : menuTab === 'fault'
+                ? getFilteredFaultActions()
+                : getVisibleActions(sport, 'neutral', getNeutralActionsForSport(sport))
+            ).map(a => (
               <button
                 key={a.customId ?? a.key}
-                onClick={() => handleActionSelect(a.key as ActionType, a.customId ? a.label : undefined)}
+                onClick={() => handleActionSelect(a.key as ActionType, a.customId ? a.label : undefined, a.sigil, a.showOnCourt)}
                 className={`py-2.5 px-2 text-xs font-semibold rounded-lg transition-all active:scale-95 ${
                   menuTab === 'scored'
                     ? 'bg-action-scored/10 text-action-scored hover:bg-action-scored/20 border border-action-scored/20'
-                    : 'bg-action-fault/10 text-action-fault hover:bg-action-fault/20 border border-action-fault/20'
+                    : menuTab === 'fault'
+                      ? 'bg-action-fault/10 text-action-fault hover:bg-action-fault/20 border border-action-fault/20'
+                      : 'bg-muted/50 text-foreground hover:bg-muted border border-border'
                 }`}
               >
                 {a.customId ? a.label : t(`actions.${a.key}`, a.label)}
+                {a.sigil && <span className="ml-1 text-[10px] opacity-60">({a.sigil})</span>}
               </button>
             ))}
           </div>

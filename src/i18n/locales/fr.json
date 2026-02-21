@@ -246,7 +246,8 @@
     "faultBasket": "Actions négatives",
     "scoredTennis": "Coups Gagnants",
     "faultTennis": "Fautes adverses",
-    "whoServes": "Qui sert en premier ?"
+    "whoServes": "Qui sert en premier ?",
+    "neutralTab": "Stats"
   },
   "roster": {
     "defineRoster": "Définir le roster {{team}}",
@@ -470,13 +471,22 @@
     "description": "Masquez les actions par défaut ou créez vos propres actions. Les actions personnalisées sont enregistrées sous la catégorie « Autre » pour préserver la compatibilité.",
     "scored": "⚡ Points gagnés",
     "faults": "❌ Fautes",
+    "neutral": "📊 Neutres",
     "addAction": "Ajouter",
     "newActionPlaceholder": "Nom de l'action",
+    "sigilPlaceholder": "Sigil",
+    "showOnCourt": "Terrain",
     "show": "Afficher",
     "hide": "Masquer",
     "volleyball": "Volley",
     "basketball": "Basket",
     "tennis": "Tennis",
     "padel": "Padel"
+  },
+  "notifications": {
+    "promptTitle": "Ne manquez aucune stat 🔔",
+    "promptText": "Activez les notifications pour recevoir des conseils d'analyse quotidiens et des rappels de matchs.",
+    "later": "Plus tard",
+    "enable": "Activer"
   }
 }

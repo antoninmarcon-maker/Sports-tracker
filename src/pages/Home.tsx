@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { PlayerAutocomplete } from '@/components/PlayerAutocomplete';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { getAllMatches, createNewMatch, saveMatch, setActiveMatchId, deleteMatch, getMatch } from '@/lib/matchStorage';
 import { syncLocalMatchesToCloud, getCloudMatches, saveCloudMatch, deleteCloudMatch, getCloudMatchById } from '@/lib/cloudStorage';
-import { updateTutorialStep } from '@/lib/pushNotifications';
+import { updateTutorialStep, getNotificationPermission, subscribeToPush } from '@/lib/pushNotifications';
 import { MatchSummary, SetData, Team, SportType, MatchFormat, getDefaultMatchFormat } from '@/types/sports';
 import { getSavedPlayers } from '@/lib/savedPlayers';
 import { toast } from 'sonner';
@@ -82,6 +82,7 @@ export default function Home() {
   const [showSavedPlayers, setShowSavedPlayers] = useState(false);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
   const [savedPlayersList, setSavedPlayersList] = useState<{ id: string; name: string }[]>([]);
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
 
   // Load saved players for auto-completion when dialog opens for racket sports
   useEffect(() => {
@@ -181,6 +182,19 @@ export default function Home() {
     }
   }, [user, guestDismissed, authLoaded]);
 
+  // Push notification prompt
+  useEffect(() => {
+    if (!user || !authLoaded) return;
+    const hasCreated = localStorage.getItem('hasCreatedMatch');
+    const hasDeclined = localStorage.getItem('hasDeclinedPushPrompt');
+    if (!hasCreated || hasDeclined) return;
+    const perm = getNotificationPermission();
+    if (perm === 'default') {
+      const timer = setTimeout(() => setShowPushPrompt(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, authLoaded]);
+
   const handleCreate = () => {
     const isRacket = selectedSport === 'tennis' || selectedSport === 'padel';
     
@@ -222,6 +236,7 @@ export default function Home() {
     
     saveMatch(match);
     setActiveMatchId(match.id);
+    localStorage.setItem('hasCreatedMatch', 'true');
     if (user) {
       saveCloudMatch(user.id, match).catch(err =>
         { if (import.meta.env.DEV) console.error('Cloud save failed:', err); }
@@ -363,6 +378,32 @@ export default function Home() {
         onOpenChange={setShowAuth}
         onGuest={() => { setGuestDismissed(true); sessionStorage.setItem('guestDismissed', 'true'); }}
       />
+
+      {/* Push notification prompt */}
+      <Dialog open={showPushPrompt} onOpenChange={setShowPushPrompt}>
+        <DialogContent className="max-w-xs rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-center text-lg">{t('notifications.promptTitle')}</DialogTitle>
+            <DialogDescription className="text-center text-sm text-muted-foreground">
+              {t('notifications.promptText')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3">
+            <button
+              onClick={() => { setShowPushPrompt(false); localStorage.setItem('hasDeclinedPushPrompt', 'true'); }}
+              className="flex-1 py-2.5 rounded-lg bg-secondary text-secondary-foreground font-semibold text-sm"
+            >
+              {t('notifications.later')}
+            </button>
+            <button
+              onClick={async () => { setShowPushPrompt(false); await subscribeToPush(); }}
+              className="flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm"
+            >
+              {t('notifications.enable')}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <main className="flex-1 overflow-auto p-4 max-w-lg mx-auto w-full space-y-6">
         <PwaInstallBanner />

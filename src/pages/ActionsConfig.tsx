@@ -4,7 +4,9 @@ import { ArrowLeft, Eye, EyeOff, Plus, Pencil, Trash2, X, Check } from 'lucide-r
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { SportType, PointType, getScoredActionsForSport, getFaultActionsForSport } from '@/types/sports';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { SportType, PointType, getScoredActionsForSport, getFaultActionsForSport, getNeutralActionsForSport } from '@/types/sports';
 import {
   getActionsConfig, toggleActionVisibility, addCustomAction,
   updateCustomAction, deleteCustomAction,
@@ -18,14 +20,6 @@ const SPORTS: { key: SportType; icon: string }[] = [
   { key: 'padel', icon: '🏓' },
 ];
 
-// "Other" default actions that are hidden by default and should not appear in the list
-const OTHER_DEFAULT_KEYS = [
-  'other_offensive', 'other_volley_fault',
-  'other_tennis_winner', 'other_tennis_fault',
-  'other_padel_winner', 'other_padel_fault',
-  'other_basket_fault',
-];
-
 export default function ActionsConfig() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -34,9 +28,14 @@ export default function ActionsConfig() {
   const [addingCategory, setAddingCategory] = useState<PointType | null>(null);
   const [newLabel, setNewLabel] = useState('');
   const [newPoints, setNewPoints] = useState<number>(2);
+  const [newSigil, setNewSigil] = useState('');
+  const [newShowOnCourt, setNewShowOnCourt] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
   const [editPoints, setEditPoints] = useState<number>(2);
+  const [editSigil, setEditSigil] = useState('');
+  const [editShowOnCourt, setEditShowOnCourt] = useState(false);
+
   const handleToggle = useCallback((key: string) => {
     setConfig(toggleActionVisibility(key));
   }, []);
@@ -44,17 +43,21 @@ export default function ActionsConfig() {
   const handleAdd = useCallback(() => {
     if (!newLabel.trim() || !addingCategory) return;
     const pts = (sport === 'basketball' && addingCategory === 'scored') ? newPoints : undefined;
-    setConfig(addCustomAction(newLabel, sport, addingCategory, pts));
+    const sigil = addingCategory === 'neutral' ? newSigil : undefined;
+    const showOnCourt = addingCategory === 'neutral' ? newShowOnCourt : undefined;
+    setConfig(addCustomAction(newLabel, sport, addingCategory, pts, sigil, showOnCourt));
     setNewLabel('');
     setNewPoints(2);
+    setNewSigil('');
+    setNewShowOnCourt(false);
     setAddingCategory(null);
-  }, [newLabel, sport, addingCategory, newPoints]);
+  }, [newLabel, sport, addingCategory, newPoints, newSigil, newShowOnCourt]);
 
   const handleUpdate = useCallback((id: string) => {
     if (!editLabel.trim()) return;
-    setConfig(updateCustomAction(id, editLabel, editPoints));
+    setConfig(updateCustomAction(id, editLabel, editPoints, editSigil || undefined, editShowOnCourt));
     setEditingId(null);
-  }, [editLabel, editPoints]);
+  }, [editLabel, editPoints, editSigil, editShowOnCourt]);
 
   const handleDelete = useCallback((id: string) => {
     setConfig(deleteCustomAction(id));
@@ -63,10 +66,9 @@ export default function ActionsConfig() {
   const renderCategory = (category: PointType) => {
     const defaultActions = category === 'scored'
       ? getScoredActionsForSport(sport)
-      : getFaultActionsForSport(sport);
-
-    // Filter out the hidden "other" defaults from the visible list
-    const visibleDefaults = defaultActions.filter(a => !OTHER_DEFAULT_KEYS.includes(a.key));
+      : category === 'fault'
+        ? getFaultActionsForSport(sport)
+        : getNeutralActionsForSport(sport);
 
     const customs = config.customActions.filter(
       c => c.sport === sport && c.category === category
@@ -74,14 +76,19 @@ export default function ActionsConfig() {
 
     const categoryLabel = category === 'scored'
       ? t('actionsConfig.scored')
-      : t('actionsConfig.faults');
+      : category === 'fault'
+        ? t('actionsConfig.faults')
+        : t('actionsConfig.neutral');
+
+    const showPtsForCategory = sport === 'basketball' && category === 'scored';
+    const isNeutral = category === 'neutral';
 
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-foreground">{categoryLabel}</h3>
           <button
-            onClick={() => { setAddingCategory(category); setNewLabel(''); }}
+            onClick={() => { setAddingCategory(category); setNewLabel(''); setNewSigil(''); setNewShowOnCourt(false); }}
             className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-medium"
           >
             <Plus size={14} /> {t('actionsConfig.addAction')}
@@ -89,7 +96,7 @@ export default function ActionsConfig() {
         </div>
 
         {/* Default actions */}
-        {visibleDefaults.map(a => {
+        {defaultActions.map(a => {
           const isHidden = config.hiddenActions.includes(a.key);
           return (
             <div
@@ -121,15 +128,18 @@ export default function ActionsConfig() {
 
         {/* Custom actions */}
         {customs.map(c => {
-          const showPts = sport === 'basketball' && category === 'scored';
+          const isHidden = config.hiddenActions.includes(c.id);
+          const showPts = showPtsForCategory;
           return (
-          <div key={c.id} className="flex items-center justify-between p-3 rounded-lg border border-primary/20 bg-primary/5">
+          <div key={c.id} className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+            isHidden ? 'border-border/50 bg-muted/30 opacity-60' : 'border-primary/20 bg-primary/5'
+          }`}>
             {editingId === c.id ? (
-              <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-center gap-2 flex-1 flex-wrap">
                 <Input
                   value={editLabel}
                   onChange={e => setEditLabel(e.target.value)}
-                  className="h-8 text-sm flex-1"
+                  className="h-8 text-sm flex-1 min-w-[100px]"
                   onKeyDown={e => e.key === 'Enter' && handleUpdate(c.id)}
                   autoFocus
                 />
@@ -141,6 +151,20 @@ export default function ActionsConfig() {
                       >{p}</button>
                     ))}
                   </div>
+                )}
+                {isNeutral && (
+                  <>
+                    <Input
+                      value={editSigil}
+                      onChange={e => setEditSigil(e.target.value.slice(0, 2).toUpperCase())}
+                      placeholder={t('actionsConfig.sigilPlaceholder')}
+                      className="h-8 text-sm w-16"
+                    />
+                    <div className="flex items-center gap-1.5">
+                      <Switch checked={editShowOnCourt} onCheckedChange={setEditShowOnCourt} className="scale-75" />
+                      <Label className="text-[10px] text-muted-foreground">{t('actionsConfig.showOnCourt')}</Label>
+                    </div>
+                  </>
                 )}
                 <button onClick={() => handleUpdate(c.id)} className="p-1 text-primary">
                   <Check size={16} />
@@ -156,10 +180,27 @@ export default function ActionsConfig() {
                   {showPts && c.points != null && (
                     <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">{c.points}</span>
                   )}
+                  {isNeutral && c.sigil && (
+                    <span className="ml-1.5 inline-flex items-center justify-center w-6 h-5 rounded bg-muted text-muted-foreground text-[10px] font-bold">{c.sigil}</span>
+                  )}
+                  {isNeutral && c.showOnCourt && (
+                    <span className="ml-1 text-[10px] text-muted-foreground">📍</span>
+                  )}
                 </span>
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => { setEditingId(c.id); setEditLabel(c.label); setEditPoints(c.points ?? 2); }}
+                    onClick={() => handleToggle(c.id)}
+                    className="p-1.5 rounded-md hover:bg-secondary transition-colors"
+                    title={isHidden ? t('actionsConfig.show') : t('actionsConfig.hide')}
+                  >
+                    {isHidden ? (
+                      <EyeOff size={14} className="text-muted-foreground" />
+                    ) : (
+                      <Eye size={14} className="text-foreground" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => { setEditingId(c.id); setEditLabel(c.label); setEditPoints(c.points ?? 2); setEditSigil(c.sigil ?? ''); setEditShowOnCourt(c.showOnCourt ?? false); }}
                     className="p-1.5 rounded-md hover:bg-secondary transition-colors"
                   >
                     <Pencil size={14} className="text-muted-foreground" />
@@ -179,16 +220,16 @@ export default function ActionsConfig() {
 
         {/* Add form */}
         {addingCategory === category && (
-          <div className="flex items-center gap-2 p-2 rounded-lg border border-primary/30 bg-primary/5">
+          <div className="flex items-center gap-2 p-2 rounded-lg border border-primary/30 bg-primary/5 flex-wrap">
             <Input
               value={newLabel}
               onChange={e => setNewLabel(e.target.value)}
               placeholder={t('actionsConfig.newActionPlaceholder')}
-              className="h-8 text-sm flex-1"
+              className="h-8 text-sm flex-1 min-w-[100px]"
               onKeyDown={e => e.key === 'Enter' && handleAdd()}
               autoFocus
             />
-            {sport === 'basketball' && category === 'scored' && (
+            {showPtsForCategory && (
               <div className="flex gap-1">
                 {[1, 2, 3].map(p => (
                   <button key={p} onClick={() => setNewPoints(p)}
@@ -196,6 +237,20 @@ export default function ActionsConfig() {
                   >{p}</button>
                 ))}
               </div>
+            )}
+            {isNeutral && (
+              <>
+                <Input
+                  value={newSigil}
+                  onChange={e => setNewSigil(e.target.value.slice(0, 2).toUpperCase())}
+                  placeholder={t('actionsConfig.sigilPlaceholder')}
+                  className="h-8 text-sm w-16"
+                />
+                <div className="flex items-center gap-1.5">
+                  <Switch checked={newShowOnCourt} onCheckedChange={setNewShowOnCourt} className="scale-75" />
+                  <Label className="text-[10px] text-muted-foreground">{t('actionsConfig.showOnCourt')}</Label>
+                </div>
+              </>
             )}
             <button
               onClick={handleAdd}
@@ -238,6 +293,7 @@ export default function ActionsConfig() {
             <TabsContent key={s.key} value={s.key} className="space-y-6 mt-4">
               {renderCategory('scored')}
               {renderCategory('fault')}
+              {renderCategory('neutral')}
             </TabsContent>
           ))}
         </Tabs>
