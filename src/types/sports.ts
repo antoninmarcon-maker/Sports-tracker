@@ -44,9 +44,9 @@ export const FAULT_ACTIONS: { key: FaultAction; label: string }[] = [
 ];
 
 export const BASKET_SCORED_ACTIONS: { key: BasketScoredAction; label: string; points: number }[] = [
-  { key: 'free_throw', label: 'Lancer franc (1pt)', points: 1 },
-  { key: 'two_points', label: 'Intérieur (2pts)', points: 2 },
-  { key: 'three_points', label: 'Extérieur (3pts)', points: 3 },
+  { key: 'free_throw', label: 'Lancer franc', points: 1 },
+  { key: 'two_points', label: 'Intérieur', points: 2 },
+  { key: 'three_points', label: 'Extérieur', points: 3 },
 ];
 
 export const BASKET_FAULT_ACTIONS: { key: BasketFaultAction; label: string }[] = [

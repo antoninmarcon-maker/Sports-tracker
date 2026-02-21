@@ -100,6 +100,9 @@ export default function ActionsConfig() {
             >
               <span className="text-sm font-medium text-foreground">
                 {t(`actions.${a.key}`, a.label)}
+                {'points' in a && a.points != null && (
+                  <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">{a.points as number}</span>
+                )}
               </span>
               <button
                 onClick={() => handleToggle(a.key)}
