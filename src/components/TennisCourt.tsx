@@ -1,5 +1,5 @@
 import { useRef, useCallback, useMemo, useEffect } from 'react';
-import { Point, Team, ActionType, PointType, isTennisScoredAction, MatchFormat } from '@/types/sports';
+import { Point, Team, ActionType, PointType, isTennisScoredAction, isAceAction, MatchFormat } from '@/types/sports';
 
 interface TennisCourtProps {
   points: Point[];
@@ -26,7 +26,7 @@ const SERVICE_LEFT = 165;  // service line left side
 const SERVICE_RIGHT = 435; // service line right side
 const MID_Y = 200;
 
-type ZoneType = 'left_court' | 'right_court' | 'outside' | 'net' | 'alley_left' | 'alley_right' | 'service_box';
+type ZoneType = 'left_court' | 'right_court' | 'outside' | 'net' | 'alley_left' | 'alley_right' | 'service_box_left' | 'service_box_right';
 
 function getClickZone(svgX: number, svgY: number): ZoneType {
   const inDoublesBox = svgX >= CL && svgX <= CR && svgY >= CT && svgY <= CB;
@@ -39,6 +39,10 @@ function getClickZone(svgX: number, svgY: number): ZoneType {
   if (svgY < ST || svgY > SB) {
     return svgX < NET_X ? 'alley_left' : 'alley_right';
   }
+
+  // Service boxes (between service line and net, within singles sidelines)
+  if (svgX >= SERVICE_LEFT && svgX < NET_X && svgY >= ST && svgY <= SB) return 'service_box_left';
+  if (svgX > NET_X && svgX <= SERVICE_RIGHT && svgY >= ST && svgY <= SB) return 'service_box_right';
 
   if (svgX < NET_X) return 'left_court';
   return 'right_court';
@@ -58,22 +62,32 @@ function isZoneAllowed(
   // In singles, alleys are treated as outside
   const isSingles = matchFormat === 'singles' || !matchFormat;
 
+  // Aces: must land in opponent's service boxes only
+  if (isAceAction(action)) {
+    const opponentServiceBox = opponentSide === 'left' ? 'service_box_left' : 'service_box_right';
+    return zone === opponentServiceBox;
+  }
+
   if (isTennisScoredAction(action)) {
     if (isSingles) {
-      // Singles: only main court allowed for winners (no alleys)
-      return zone === (opponentSide === 'left' ? 'left_court' : 'right_court');
+      // Singles: main court + service boxes (no alleys)
+      const allowed = opponentSide === 'left'
+        ? ['left_court', 'service_box_left']
+        : ['right_court', 'service_box_right'];
+      return allowed.includes(zone);
     }
     // Doubles: alleys included
     const allowed = opponentSide === 'left'
-      ? ['left_court', 'alley_left']
-      : ['right_court', 'alley_right'];
+      ? ['left_court', 'alley_left', 'service_box_left']
+      : ['right_court', 'alley_right', 'service_box_right'];
     return allowed.includes(zone);
   }
 
   // Faults
   switch (action) {
     case 'double_fault':
-      return zone === 'outside' || zone === (opponentSide === 'left' ? 'left_court' : 'right_court');
+      return zone === 'outside' || zone === (opponentSide === 'left' ? 'left_court' : 'right_court')
+        || zone === (opponentSide === 'left' ? 'service_box_left' : 'service_box_right');
     case 'net_error':
       return zone === 'net';
     case 'out_long':
@@ -97,6 +111,14 @@ function getZoneHighlights(
   const opponentSide = teamSide === 'left' ? 'right' : 'left';
 
   const isSingles = matchFormat === 'singles' || !matchFormat;
+
+  // Aces: only service boxes
+  if (isAceAction(action)) {
+    if (opponentSide === 'right') {
+      return [{ x: NET_X, y: ST, w: SERVICE_RIGHT - NET_X, h: SB - ST }];
+    }
+    return [{ x: SERVICE_LEFT, y: ST, w: NET_X - SERVICE_LEFT, h: SB - ST }];
+  }
 
   if (isTennisScoredAction(action)) {
     if (isSingles) {

@@ -1,5 +1,5 @@
 import { useRef, useCallback, useMemo, useEffect } from 'react';
-import { Point, Team, ActionType, PointType, isPadelScoredAction } from '@/types/sports';
+import { Point, Team, ActionType, PointType, isPadelScoredAction, isAceAction } from '@/types/sports';
 
 interface PadelCourtProps {
   points: Point[];
@@ -35,13 +35,16 @@ const ENCLOSURE_B = CB + WALL_THICKNESS;
 // Side grilles (partial glass on top/bottom walls, near net)
 const GRILLE_WIDTH = 80;
 
-type ZoneType = 'left_court' | 'right_court' | 'net' | 'back_glass_left' | 'back_glass_right' | 'side_wall_top' | 'side_wall_bottom' | 'grille' | 'outside';
+type ZoneType = 'left_court' | 'right_court' | 'net' | 'back_glass_left' | 'back_glass_right' | 'side_wall_top' | 'side_wall_bottom' | 'grille' | 'outside' | 'service_box_left' | 'service_box_right';
 
 function getClickZone(svgX: number, svgY: number): ZoneType {
   const inCourt = svgX >= CL && svgX <= CR && svgY >= CT && svgY <= CB;
 
   if (inCourt) {
     if (Math.abs(svgX - NET_X) < 12) return 'net';
+    // Service boxes
+    if (svgX >= SERVICE_LEFT && svgX < NET_X && svgY >= CT && svgY <= CB) return 'service_box_left';
+    if (svgX > NET_X && svgX <= SERVICE_RIGHT && svgY >= CT && svgY <= CB) return 'service_box_right';
     return svgX < NET_X ? 'left_court' : 'right_court';
   }
 
@@ -71,15 +74,22 @@ function isZoneAllowed(
     : (team === 'blue' ? 'left' : 'right');
   const opponentSide = teamSide === 'left' ? 'right' : 'left';
 
+  if (isAceAction(action)) {
+    const opponentServiceBox = opponentSide === 'left' ? 'service_box_left' : 'service_box_right';
+    return zone === opponentServiceBox;
+  }
+
   if (isPadelScoredAction(action)) {
-    // Winners: opponent's court or walls behind opponent
-    const courtZone = opponentSide === 'left' ? 'left_court' : 'right_court';
+    // Winners: opponent's court (including service box) or walls behind opponent
+    const courtZones = opponentSide === 'left'
+      ? ['left_court', 'service_box_left']
+      : ['right_court', 'service_box_right'];
     const glassZone = opponentSide === 'left' ? 'back_glass_left' : 'back_glass_right';
     // par_3 specifically targets vitre/grille
     if (action === 'par_3') {
       return [glassZone, 'grille', 'side_wall_top', 'side_wall_bottom'].includes(zone);
     }
-    return [courtZone, glassZone, 'grille'].includes(zone);
+    return [...courtZones, glassZone, 'grille'].includes(zone);
   }
 
   // Faults
@@ -108,6 +118,14 @@ function getZoneHighlights(
     ? (team === 'blue' ? 'right' : 'left')
     : (team === 'blue' ? 'left' : 'right');
   const opponentSide = teamSide === 'left' ? 'right' : 'left';
+
+  if (isAceAction(action)) {
+    // Only service boxes
+    if (opponentSide === 'right') {
+      return [{ x: NET_X, y: CT, w: SERVICE_RIGHT - NET_X, h: CB - CT }];
+    }
+    return [{ x: SERVICE_LEFT, y: CT, w: NET_X - SERVICE_LEFT, h: CB - CT }];
+  }
 
   if (isPadelScoredAction(action)) {
     if (action === 'par_3') {
@@ -150,7 +168,7 @@ function getZoneHighlights(
 }
 
 const ACTION_SHORT: Record<string, string> = {
-  vibora: 'Vi', bandeja: 'Bd', smash_padel: 'Sm', volee: 'V',
+  padel_ace: 'As', vibora: 'Vi', bandeja: 'Bd', smash_padel: 'Sm', volee: 'V',
   bajada: 'Bj', chiquita_winner: 'Ch', par_3: 'P3', other_padel_winner: '+',
   padel_double_fault: 'DF', padel_unforced_error: 'FD', padel_net_error: 'F',
   padel_out: 'O', grille_error: 'Gr', vitre_error: 'Vt',

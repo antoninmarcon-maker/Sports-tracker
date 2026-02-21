@@ -145,7 +145,7 @@ const Index = () => {
     }
     // Tennis/Padel: smart player filtering
     if (isTennisOrPadel) {
-      const SERVICE_PLAYER_ACTIONS = ['tennis_ace', 'double_fault', 'padel_double_fault'];
+      const SERVICE_PLAYER_ACTIONS = ['tennis_ace', 'padel_ace', 'double_fault', 'padel_double_fault'];
       const isServiceAction = SERVICE_PLAYER_ACTIONS.includes(pendingPoint.action);
 
       let relevantPlayers: Player[];
@@ -365,7 +365,7 @@ const Index = () => {
           }
 
           if (isTennisOrPadel) {
-            const SERVICE_PLAYER_ACTIONS = ['tennis_ace', 'double_fault', 'padel_double_fault'];
+            const SERVICE_PLAYER_ACTIONS = ['tennis_ace', 'padel_ace', 'double_fault', 'padel_double_fault'];
             const isServiceAction = SERVICE_PLAYER_ACTIONS.includes(pendingPoint.action);
 
             let filteredPlayers: Player[];

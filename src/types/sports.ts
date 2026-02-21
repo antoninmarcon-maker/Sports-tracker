@@ -15,7 +15,7 @@ export type TennisScoredAction = 'winner_forehand' | 'winner_backhand' | 'tennis
 export type TennisFaultAction = 'double_fault' | 'unforced_error_forehand' | 'unforced_error_backhand' | 'net_error' | 'out_long' | 'out_wide';
 
 // ---- PADEL ----
-export type PadelScoredAction = 'vibora' | 'bandeja' | 'smash_padel' | 'volee' | 'bajada' | 'chiquita_winner' | 'par_3' | 'other_padel_winner';
+export type PadelScoredAction = 'padel_ace' | 'vibora' | 'bandeja' | 'smash_padel' | 'volee' | 'bajada' | 'chiquita_winner' | 'par_3' | 'other_padel_winner';
 export type PadelFaultAction = 'padel_double_fault' | 'padel_unforced_error' | 'padel_net_error' | 'padel_out' | 'grille_error' | 'vitre_error';
 
 export type ActionType =
@@ -74,6 +74,7 @@ export const TENNIS_FAULT_ACTIONS: { key: TennisFaultAction; label: string }[] =
 ];
 
 export const PADEL_SCORED_ACTIONS: { key: PadelScoredAction; label: string }[] = [
+  { key: 'padel_ace', label: 'Ace' },
   { key: 'vibora', label: 'Víbora' },
   { key: 'bandeja', label: 'Bandeja' },
   { key: 'smash_padel', label: 'Smash' },
@@ -114,6 +115,10 @@ export function isTennisScoredAction(action: ActionType): action is TennisScored
 
 export function isPadelScoredAction(action: ActionType): action is PadelScoredAction {
   return PADEL_SCORED_ACTIONS.some(a => a.key === action);
+}
+
+export function isAceAction(action: ActionType): boolean {
+  return action === 'tennis_ace' || action === 'padel_ace';
 }
 
 export function getScoredActionsForSport(sport: SportType) {
