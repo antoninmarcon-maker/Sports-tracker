@@ -2,3 +2,6 @@ project_id = "ikjkkakphhpogjkrkazv"
 
 [functions.analyze-match]
 verify_jwt = false
+
+[functions.send-tutorial-push]
+verify_jwt = false

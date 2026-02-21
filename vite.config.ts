@@ -17,10 +17,12 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "placeholder.svg"],
-      workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/, /^\/sitemap\.xml$/, /^\/robots\.txt$/],
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpeg,jpg,woff,woff2}"],
       },
       manifest: {
@@ -51,6 +53,9 @@ export default defineConfig(({ mode }) => ({
             purpose: "any maskable",
           },
         ],
+      },
+      devOptions: {
+        enabled: false,
       },
     }),
   ].filter(Boolean),

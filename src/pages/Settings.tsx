@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, MessageSquare, ShieldCheck, UserRound, Loader2, Globe, Sun, Moon, Monitor, ImagePlus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, MessageSquare, ShieldCheck, UserRound, Loader2, Globe, Sun, Moon, Monitor, ImagePlus, Trash2, Bell, BellOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/useTheme';
+import { isPushSupported, isIOSSafari, getNotificationPermission, subscribeToPush } from '@/lib/pushNotifications';
 import type { User } from '@supabase/supabase-js';
 
 export default function Settings() {
@@ -32,6 +33,10 @@ export default function Settings() {
   const logoInputId = 'logo-file-input';
   const [feedbackMsg, setFeedbackMsg] = useState('');
   const [sendingFeedback, setSendingFeedback] = useState(false);
+
+  // Notifications
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
+  const [subscribingPush, setSubscribingPush] = useState(false);
 
   const isOAuthUser = user?.app_metadata?.provider && user.app_metadata.provider !== 'email';
 
@@ -59,6 +64,7 @@ export default function Settings() {
       setLoading(false);
     };
     init();
+    setNotifPermission(getNotificationPermission());
   }, [navigate]);
 
   const handleSaveProfile = async () => {
@@ -125,6 +131,22 @@ export default function Settings() {
     i18n.changeLanguage(lang);
   };
 
+  const handleEnableNotifications = async () => {
+    setSubscribingPush(true);
+    const success = await subscribeToPush();
+    setSubscribingPush(false);
+    setNotifPermission(getNotificationPermission());
+    if (success) {
+      toast.success(t('settings.notificationsEnabled'));
+    } else {
+      if (Notification.permission === 'denied') {
+        toast.error(t('settings.notificationsDenied'));
+      } else {
+        toast.error(t('settings.notificationsError'));
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -189,6 +211,49 @@ export default function Settings() {
                 </SelectContent>
               </Select>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Notifications */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Bell size={18} className="text-primary" />
+              {t('settings.notifications')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {isIOSSafari() ? (
+              <div className="text-sm text-muted-foreground bg-secondary rounded-lg p-3">
+                <p>{t('settings.iosNotifWarning')}</p>
+              </div>
+            ) : !isPushSupported() ? (
+              <div className="text-sm text-muted-foreground bg-secondary rounded-lg p-3">
+                <p>{t('settings.notifNotSupported')}</p>
+              </div>
+            ) : notifPermission === 'granted' ? (
+              <div className="flex items-center gap-2 text-sm text-action-scored bg-action-scored/10 rounded-lg p-3">
+                <Bell size={16} />
+                <span>{t('settings.notificationsActive')}</span>
+              </div>
+            ) : notifPermission === 'denied' ? (
+              <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+                <BellOff size={16} />
+                <span>{t('settings.notificationsDeniedInfo')}</span>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground">{t('settings.notifDesc')}</p>
+                <button
+                  onClick={handleEnableNotifications}
+                  disabled={subscribingPush}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50"
+                >
+                  {subscribingPush ? <Loader2 size={14} className="animate-spin" /> : <Bell size={14} />}
+                  {t('settings.enableNotifications')}
+                </button>
+              </>
+            )}
           </CardContent>
         </Card>
 

@@ -142,7 +142,17 @@
     "logoRemove": "Remove logo",
     "logoUpdated": "Logo updated!",
     "logoRemoved": "Logo removed.",
-    "logoTooLarge": "Image must be less than 2 MB."
+    "logoTooLarge": "Image must be less than 2 MB.",
+    "notifications": "Notifications",
+    "notifDesc": "Get daily tips to make the most of My Volley.",
+    "enableNotifications": "Enable notifications",
+    "notificationsEnabled": "Notifications enabled!",
+    "notificationsDenied": "Notifications have been blocked. Change permissions in your browser settings.",
+    "notificationsDeniedInfo": "Notifications are blocked. Change permissions in your browser settings.",
+    "notificationsError": "Unable to enable notifications.",
+    "notificationsActive": "Notifications are enabled ✓",
+    "iosNotifWarning": "To enable notifications on iPhone, first add My Volley to your Home Screen (Share button ⎙ > Add to Home Screen).",
+    "notifNotSupported": "Push notifications are not supported by your browser."
   },
   "help": {
     "title": "Help center",

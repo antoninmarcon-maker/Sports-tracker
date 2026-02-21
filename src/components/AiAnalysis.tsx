@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Point, SetData, Player, SportType, TENNIS_SCORED_ACTIONS, TENNIS_FAULT_ACTIONS, PADEL_SCORED_ACTIONS, PADEL_FAULT_ACTIONS } from '@/types/sports';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
+import { updateTutorialStep } from '@/lib/pushNotifications';
 
 interface AiAnalysisProps {
   points: Point[];
@@ -134,6 +135,8 @@ export function AiAnalysis({ points, completedSets, currentSetPoints, teamNames,
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setAnalysis(data.analysis);
+      // Tutorial step 2 → 3: AI analysis completed successfully
+      updateTutorialStep(3).catch(() => {});
     } catch (err: any) {
       toast.error(err.message || t('analysis.analysisError'));
       setAnalysis(null);

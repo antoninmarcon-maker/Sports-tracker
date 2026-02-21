@@ -212,6 +212,39 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth_key: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh_key: string
+          tutorial_step: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          auth_key: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh_key: string
+          tutorial_step?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          auth_key?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh_key?: string
+          tutorial_step?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       saved_players: {
         Row: {
           created_at: string

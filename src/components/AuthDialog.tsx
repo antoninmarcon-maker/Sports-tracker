@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { updateTutorialStep, linkUserToSubscription } from '@/lib/pushNotifications';
 
 interface AuthDialogProps {
   open: boolean;
@@ -41,9 +42,14 @@ export function AuthDialog({ open, onOpenChange, onGuest, message }: AuthDialogP
         if (error) throw error;
         toast.success(t('auth.checkEmail'));
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success(t('auth.connected'));
+        // Tutorial step 1 → 2: user logged in, link subscription
+        if (data.user) {
+          linkUserToSubscription(data.user.id).catch(() => {});
+          updateTutorialStep(2).catch(() => {});
+        }
         onOpenChange(false);
       }
     } catch (err: any) {

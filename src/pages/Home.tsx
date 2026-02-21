@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getAllMatches, createNewMatch, saveMatch, setActiveMatchId, deleteMatch, getMatch } from '@/lib/matchStorage';
 import { syncLocalMatchesToCloud, getCloudMatches, saveCloudMatch, deleteCloudMatch, getCloudMatchById } from '@/lib/cloudStorage';
+import { updateTutorialStep } from '@/lib/pushNotifications';
 import { MatchSummary, SetData, Team, SportType } from '@/types/sports';
 import { toast } from 'sonner';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
@@ -171,6 +172,8 @@ export default function Home() {
         { if (import.meta.env.DEV) console.error('Cloud save failed:', err); }
       );
     }
+    // Tutorial step 0 → 1: first match created
+    updateTutorialStep(1).catch(() => {});
     setShowNew(false);
     navigate(`/match/${match.id}`);
   };
