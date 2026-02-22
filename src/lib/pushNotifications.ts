@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
+const VAPID_PUBLIC_KEY = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined)
+  || 'BAgg-G4K1SRIjw9ZBSmmMRuGKVtZfY7CQ8gLDh-gnNV1_DqJ_kXnkIURM0lEtoqfP5NixET-gjwifJQqt9TBxuM';
 const SUBSCRIPTION_ENDPOINT_KEY = 'push-subscription-endpoint';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
