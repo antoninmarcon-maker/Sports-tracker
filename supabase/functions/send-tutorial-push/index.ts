@@ -1,11 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import * as webpush from "jsr:@negrel/webpush";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+// No CORS headers needed — this function is server-to-server only (cron/service role)
+const jsonHeaders = { "Content-Type": "application/json" };
 
 const TUTORIAL_MESSAGES: Record<number, { title: string; body: string }> = {
   0: {
@@ -24,7 +21,7 @@ const TUTORIAL_MESSAGES: Record<number, { title: string; body: string }> = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { status: 204 });
   }
 
   try {
@@ -35,7 +32,7 @@ Deno.serve(async (req) => {
     if (token !== serviceRoleKey) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: jsonHeaders,
       });
     }
 
@@ -49,10 +46,7 @@ Deno.serve(async (req) => {
     if (!vapidPublicKey || !vapidPrivateKey) {
       return new Response(
         JSON.stringify({ error: "VAPID keys not configured" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 500, headers: jsonHeaders }
       );
     }
 
@@ -128,17 +122,12 @@ Deno.serve(async (req) => {
         failed,
         errors: errors.slice(0, 5),
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { headers: jsonHeaders }
     );
   } catch (err: any) {
     return new Response(
       JSON.stringify({ error: err.message || "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: jsonHeaders }
     );
   }
 });
