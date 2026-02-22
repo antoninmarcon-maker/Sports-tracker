@@ -333,7 +333,7 @@ export default function Home() {
   return (
     <div className="min-h-dvh bg-background flex flex-col">
       <header className="sticky top-0 z-40 bg-background px-4 py-6 pt-[max(1.5rem,env(safe-area-inset-top))] border-b border-border flex flex-col items-center gap-3 relative">
-        <div className="absolute top-4 left-4">
+        <div className="absolute left-4" style={{ top: 'max(1rem, env(safe-area-inset-top))' }}>
           <Link
             to="/help"
             className="p-1.5 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors inline-flex"
@@ -342,7 +342,7 @@ export default function Home() {
             <HelpCircle size={18} />
           </Link>
         </div>
-        <div className="absolute top-4 right-4">
+        <div className="absolute right-4" style={{ top: 'max(1rem, env(safe-area-inset-top))' }}>
           {user ? (
             <UserMenu user={user} onOpenSavedPlayers={() => setShowSavedPlayers(true)} />
           ) : (
