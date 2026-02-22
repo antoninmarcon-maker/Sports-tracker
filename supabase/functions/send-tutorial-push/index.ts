@@ -28,12 +28,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate authorization - accept service role key or anon key (for cron)
+    // Validate authorization - only accept service role key (cron/server-to-server)
     const authHeader = req.headers.get("Authorization");
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const token = authHeader?.replace("Bearer ", "") || "";
-    if (token !== serviceRoleKey && token !== anonKey) {
+    if (token !== serviceRoleKey) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
