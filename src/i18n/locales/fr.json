@@ -117,7 +117,10 @@
     "authError": "Erreur d'authentification",
     "googleError": "Erreur Google : ",
     "appleError": "Erreur Apple : ",
-    "requiresLogin": "Cette fonctionnalité nécessite une connexion."
+    "requiresLogin": "Cette fonctionnalité nécessite une connexion.",
+    "magicLink": "Se connecter sans mot de passe",
+    "magicLinkSent": "Un lien de connexion a été envoyé à votre adresse email.",
+    "magicLinkWelcome": "Vous êtes connecté ! Vous pouvez maintenant définir un nouveau mot de passe ci-dessous si vous le souhaitez."
   },
   "settings": {
     "title": "Paramètres",

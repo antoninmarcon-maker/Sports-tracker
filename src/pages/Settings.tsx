@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, MessageSquare, ShieldCheck, UserRound, Loader2, Globe, Sun, Moon, Monitor, ImagePlus, Trash2, Bell, BellOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +38,8 @@ export default function Settings() {
   // Notifications
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
   const [subscribingPush, setSubscribingPush] = useState(false);
+  const [magicLinkArrival, setMagicLinkArrival] = useState(false);
+  const passwordSectionRef = useRef<HTMLDivElement>(null);
 
   const isOAuthUser = user?.app_metadata?.provider && user.app_metadata.provider !== 'email';
 
@@ -66,6 +68,14 @@ export default function Settings() {
     };
     init();
     setNotifPermission(getNotificationPermission());
+
+    // Handle #password hash from magic link redirect
+    if (window.location.hash === '#password') {
+      setMagicLinkArrival(true);
+      setTimeout(() => {
+        passwordSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 500);
+    }
   }, [navigate]);
 
   const handleSaveProfile = async () => {
@@ -349,7 +359,7 @@ export default function Settings() {
         </Card>
 
         {/* Security */}
-        <Card>
+        <Card ref={passwordSectionRef} id="password">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <ShieldCheck size={18} className="text-primary" />
@@ -357,6 +367,11 @@ export default function Settings() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {magicLinkArrival && !isOAuthUser && (
+              <div className="text-sm text-action-scored bg-action-scored/10 rounded-lg p-3 mb-3">
+                {t('auth.magicLinkWelcome')}
+              </div>
+            )}
             {isOAuthUser ? (
               <div className="text-sm text-muted-foreground bg-secondary rounded-lg p-3">
                 {t('settings.oauthPasswordWarning')}

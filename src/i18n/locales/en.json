@@ -117,7 +117,10 @@
     "authError": "Authentication error",
     "googleError": "Google error: ",
     "appleError": "Apple error: ",
-    "requiresLogin": "This feature requires login."
+    "requiresLogin": "This feature requires login.",
+    "magicLink": "Sign in without password",
+    "magicLinkSent": "A login link has been sent to your email address.",
+    "magicLinkWelcome": "You're logged in! You can now set a new password below if you wish."
   },
   "settings": {
     "title": "Settings",

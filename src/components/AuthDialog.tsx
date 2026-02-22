@@ -105,7 +105,31 @@ export function AuthDialog({ open, onOpenChange, onGuest, message }: AuthDialogP
             )}
           </div>
           {mode === 'login' && (
-            <button onClick={() => setMode('forgot')} className="text-xs text-primary hover:underline w-full text-right">{t('auth.forgotPasswordLink')}</button>
+            <div className="flex items-center justify-between">
+              <button onClick={() => setMode('forgot')} className="text-xs text-primary hover:underline">{t('auth.forgotPasswordLink')}</button>
+              <button
+                onClick={async () => {
+                  if (!email.trim()) { toast.error(t('auth.emailPlaceholder')); return; }
+                  setLoading(true);
+                  try {
+                    const { error } = await supabase.auth.signInWithOtp({
+                      email,
+                      options: { emailRedirectTo: `${window.location.origin}/settings#password` },
+                    });
+                    if (error) throw error;
+                    toast.success(t('auth.magicLinkSent'));
+                  } catch (err: any) {
+                    toast.error(err.message || t('auth.authError'));
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="text-xs text-primary hover:underline"
+              >
+                {t('auth.magicLink')}
+              </button>
+            </div>
           )}
           <button onClick={handleEmailAuth} disabled={loading} className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50">
             {loading ? '...' : mode === 'forgot' ? t('auth.sendLink') : mode === 'signup' ? t('auth.createAccount') : t('auth.signIn')}
