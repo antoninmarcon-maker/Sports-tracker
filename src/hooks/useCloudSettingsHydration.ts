@@ -47,14 +47,7 @@ export function useCloudSettingsHydration() {
         }
       }
 
-      // Hydrate custom logo
-      if (settings.customLogo !== undefined) {
-        if (settings.customLogo) {
-          localStorage.setItem('customLogo', settings.customLogo);
-        } else {
-          localStorage.removeItem('customLogo');
-        }
-      }
+      // customLogo stays in localStorage only — not synced from cloud
     };
 
     hydrate();
