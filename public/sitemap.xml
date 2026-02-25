@@ -1,44 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://www.my-volley.com/</loc>
-    <lastmod>2026-02-20</lastmod>
+    <loc>https://sports-tracker.my-volley.com/</loc>
+    <lastmod>2026-02-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.my-volley.com/players</loc>
-    <lastmod>2026-02-22</lastmod>
+    <loc>https://sports-tracker.my-volley.com/players</loc>
+    <lastmod>2026-02-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.my-volley.com/help</loc>
-    <lastmod>2026-02-20</lastmod>
+    <loc>https://sports-tracker.my-volley.com/help</loc>
+    <lastmod>2026-02-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.my-volley.com/credits</loc>
-    <lastmod>2026-02-20</lastmod>
+    <loc>https://sports-tracker.my-volley.com/credits</loc>
+    <lastmod>2026-02-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.my-volley.com/settings</loc>
-    <lastmod>2026-02-20</lastmod>
+    <loc>https://sports-tracker.my-volley.com/settings</loc>
+    <lastmod>2026-02-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://www.my-volley.com/actions</loc>
-    <lastmod>2026-02-21</lastmod>
+    <loc>https://sports-tracker.my-volley.com/actions</loc>
+    <lastmod>2026-02-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://www.my-volley.com/reset-password</loc>
-    <lastmod>2026-02-20</lastmod>
+    <loc>https://sports-tracker.my-volley.com/reset-password</loc>
+    <lastmod>2026-02-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
