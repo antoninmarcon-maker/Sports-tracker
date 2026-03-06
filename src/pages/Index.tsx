@@ -209,7 +209,7 @@ const Index = () => {
 
   // Auto-point logic: service faults, tennis opponent faults, custom no-court actions
   // Also handles Performance Mode: player/rating pre-selection before court click
-  const SERVICE_FAULT_ACTIONS = ['service_miss', 'double_fault', 'padel_double_fault', 'timeout'];
+  const SERVICE_FAULT_ACTIONS = ['service_miss', 'double_fault', 'padel_double_fault', 'timeout', 'first_serve_fault', 'padel_first_serve_fault'];
   useEffect(() => {
     if (!selectedTeam || !selectedAction) {
       delete (window as any).__pendingPlaceOnCourt;

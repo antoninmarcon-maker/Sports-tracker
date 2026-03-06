@@ -2,7 +2,7 @@ import { Undo2, RotateCcw, Flag, ArrowLeftRight, Play, Pause, Timer, Pencil, Plu
 import { Team, PointType, ActionType, SportType, Point, MatchMetadata, getScoredActionsForSport, getFaultActionsForSport, getNeutralActionsForSport, getPeriodLabel } from '@/types/sports';
 import { getVisibleActions } from '@/lib/actionsConfig';
 import { Input } from '@/components/ui/input';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTennisScore } from '@/hooks/useTennisScore';
 import { useTranslation } from 'react-i18next';
 
@@ -60,7 +60,17 @@ export function ScoreBoard({
   const [menuTeam, setMenuTeam] = useState<Team | null>(null);
   const [menuTab, setMenuTab] = useState<MenuTab>('scored');
   const [confirmEndSet, setConfirmEndSet] = useState(false);
-  const [firstServe, setFirstServe] = useState(true);
+  // Track pending 2nd serve state (after first serve fault)
+  const [pendingSecondServe, setPendingSecondServe] = useState<Team | null>(null);
+
+  // Reset pending second serve whenever a point is successfully added
+  const prevPointsLen = useRef(points.length);
+  useEffect(() => {
+    if (points.length !== prevPointsLen.current) {
+      setPendingSecondServe(null);
+      prevPointsLen.current = points.length;
+    }
+  }, [points.length]);
 
   const isBasketball = sport === 'basketball';
   const isTennisOrPadel = sport === 'tennis' || sport === 'padel';
@@ -83,6 +93,13 @@ export function ScoreBoard({
     if (!menuTeam) return;
     const type: PointType = menuTab;
 
+    // First serve fault: don't score a point, just flag pending 2nd serve
+    if (action === 'first_serve_fault' || action === 'padel_first_serve_fault') {
+      setPendingSecondServe(menuTeam);
+      setMenuTeam(null);
+      return;
+    }
+
     // Determine placeOnCourt: for neutral, use showOnCourt (default false); for scored/fault, always true
     const placeOnCourt = type === 'neutral' ? (showOnCourt ?? false) : true;
     (window as any).__pendingPlaceOnCourt = placeOnCourt;
@@ -90,9 +107,8 @@ export function ScoreBoard({
     // Store assignToPlayer preference for ALL action types (default true)
     (window as any).__pendingCustomAssignToPlayer = assignToPlayer ?? true;
 
-    // Auto-detect double fault as 2nd serve, otherwise use toggle state
-    const isDoubleFault = action === 'double_fault' || action === 'padel_double_fault';
-    (window as any).__pendingFirstServe = isDoubleFault ? false : firstServe;
+    // firstServe: false if we're on 2nd serve (pending second serve state), otherwise true
+    (window as any).__pendingFirstServe = pendingSecondServe !== null ? false : true;
 
     if (customLabel) {
       (window as any).__pendingCustomActionLabel = customLabel;
@@ -112,7 +128,6 @@ export function ScoreBoard({
   const openMenu = (team: Team) => {
     setMenuTeam(team);
     setMenuTab('scored');
-    setFirstServe(true);
   };
 
   const closeMenu = () => {
@@ -122,6 +137,7 @@ export function ScoreBoard({
   // Actions that can only be performed by the serving team
   const SERVICE_SCORED_ACTIONS: ActionType[] = ['ace', 'tennis_ace', 'padel_ace'];
   const SERVICE_FAULT_ACTIONS: ActionType[] = ['service_miss', 'double_fault', 'padel_double_fault'];
+  const FIRST_SERVE_FAULT_ACTIONS: ActionType[] = ['first_serve_fault', 'padel_first_serve_fault'];
 
   const getScoredActions = () => {
     const defaults = getScoredActionsForSport(sport);
@@ -143,6 +159,10 @@ export function ScoreBoard({
 
     return visible.filter(a => {
       if (SERVICE_FAULT_ACTIONS.includes(a.key as ActionType) && faultingTeam !== servingTeam) return false;
+      // Hide first_serve_fault if we're already on 2nd serve
+      if (FIRST_SERVE_FAULT_ACTIONS.includes(a.key as ActionType) && pendingSecondServe !== null) return false;
+      // Show first_serve_fault only for the serving team
+      if (FIRST_SERVE_FAULT_ACTIONS.includes(a.key as ActionType) && faultingTeam !== servingTeam) return false;
       return true;
     });
   };
@@ -294,8 +314,8 @@ export function ScoreBoard({
               onClick={() => openMenu(left)}
               disabled={!!selectedTeam || isFinished || waitingForNewSet}
               className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${left === 'blue'
-                  ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
-                  : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
+                ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
+                : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
                 }`}
             >
               <Plus size={24} className="mx-auto" />
@@ -317,8 +337,8 @@ export function ScoreBoard({
               onClick={() => openMenu(right)}
               disabled={!!selectedTeam || isFinished || waitingForNewSet}
               className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${right === 'blue'
-                  ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
-                  : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
+                ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
+                : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
                 }`}
             >
               <Plus size={24} className="mx-auto" />
@@ -367,8 +387,8 @@ export function ScoreBoard({
               onClick={() => openMenu(left)}
               disabled={!!selectedTeam || isFinished || waitingForNewSet}
               className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${left === 'blue'
-                  ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
-                  : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
+                ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
+                : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
                 }`}
             >
               <Plus size={24} className="mx-auto" />
@@ -389,8 +409,8 @@ export function ScoreBoard({
               onClick={() => openMenu(right)}
               disabled={!!selectedTeam || isFinished || waitingForNewSet}
               className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${right === 'blue'
-                  ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
-                  : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
+                ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
+                : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
                 }`}
             >
               <Plus size={24} className="mx-auto" />
@@ -402,25 +422,11 @@ export function ScoreBoard({
       {/* Action selection menu */}
       {menuTeam && (
         <div className="bg-card rounded-xl border border-border p-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-          {/* Tennis/Padel Service Toggle */}
-          {isTennisOrPadel && menuTeam === servingTeam && (
-            <div className="flex justify-center mb-1">
-              <div className="bg-secondary flex rounded-lg p-0.5">
-                <button
-                  onClick={() => setFirstServe(true)}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${firstServe ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                  {t('scoreboard.firstServe')}
-                </button>
-                <button
-                  onClick={() => setFirstServe(false)}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${!firstServe ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                  {t('scoreboard.secondServe')}
-                </button>
-              </div>
+          {/* 2nd serve indicator (only shows after first_serve_fault) */}
+          {isTennisOrPadel && pendingSecondServe === menuTeam && (
+            <div className="flex items-center justify-center gap-1.5 bg-orange-500/10 border border-orange-500/30 rounded-lg px-3 py-1.5">
+              <span className="text-sm">🎾</span>
+              <span className="text-xs font-bold text-orange-400">{t('scoreboard.secondServe')}</span>
             </div>
           )}
           <div className="flex items-center gap-2">
@@ -466,10 +472,10 @@ export function ScoreBoard({
                 key={a.customId ?? a.key}
                 onClick={() => handleActionSelect(a.key as ActionType, a.customId ? a.label : undefined, a.sigil, a.showOnCourt, (a as any).assignToPlayer)}
                 className={`py-2.5 px-2 text-xs font-semibold rounded-lg transition-all active:scale-95 ${menuTab === 'scored'
-                    ? 'bg-action-scored/10 text-action-scored hover:bg-action-scored/20 border border-action-scored/20'
-                    : menuTab === 'fault'
-                      ? 'bg-action-fault/10 text-action-fault hover:bg-action-fault/20 border border-action-fault/20'
-                      : 'bg-muted/50 text-foreground hover:bg-muted border border-border'
+                  ? 'bg-action-scored/10 text-action-scored hover:bg-action-scored/20 border border-action-scored/20'
+                  : menuTab === 'fault'
+                    ? 'bg-action-fault/10 text-action-fault hover:bg-action-fault/20 border border-action-fault/20'
+                    : 'bg-muted/50 text-foreground hover:bg-muted border border-border'
                   }`}
               >
                 {a.customId ? a.label : t(`actions.${a.key}`, a.label)}

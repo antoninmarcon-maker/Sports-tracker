@@ -12,11 +12,11 @@ export type BasketFaultAction = 'missed_shot' | 'turnover' | 'foul_committed' | 
 
 // ---- TENNIS ----
 export type TennisScoredAction = 'winner_forehand' | 'winner_backhand' | 'tennis_ace' | 'service_winner' | 'volley_winner' | 'smash' | 'drop_shot_winner' | 'lob_winner' | 'passing_winner' | 'other_tennis_winner';
-export type TennisFaultAction = 'double_fault' | 'unforced_error_forehand' | 'unforced_error_backhand' | 'return_error' | 'net_error' | 'out_long' | 'out_wide' | 'other_tennis_fault';
+export type TennisFaultAction = 'first_serve_fault' | 'double_fault' | 'unforced_error_forehand' | 'unforced_error_backhand' | 'return_error' | 'net_error' | 'out_long' | 'out_wide' | 'other_tennis_fault';
 
 // ---- PADEL ----
 export type PadelScoredAction = 'padel_ace' | 'vibora' | 'bandeja' | 'smash_padel' | 'volee' | 'bajada' | 'chiquita_winner' | 'par_3' | 'other_padel_winner';
-export type PadelFaultAction = 'padel_double_fault' | 'padel_unforced_error' | 'padel_net_error' | 'padel_out' | 'grille_error' | 'vitre_error' | 'other_padel_fault';
+export type PadelFaultAction = 'padel_first_serve_fault' | 'padel_double_fault' | 'padel_unforced_error' | 'padel_net_error' | 'padel_out' | 'grille_error' | 'vitre_error' | 'other_padel_fault';
 // ---- NEUTRAL (per-sport generic key for custom neutral actions) ----
 export type NeutralAction = 'timeout' | 'other_volley_neutral' | 'other_basket_neutral' | 'other_tennis_neutral' | 'other_padel_neutral';
 
@@ -79,6 +79,7 @@ export const TENNIS_SCORED_ACTIONS: { key: TennisScoredAction; label: string }[]
 ];
 
 export const TENNIS_FAULT_ACTIONS: { key: TennisFaultAction; label: string }[] = [
+  { key: 'first_serve_fault', label: 'Faute 1er service' },
   { key: 'double_fault', label: 'Double faute' },
   { key: 'return_error', label: 'Faute au retour' },
   { key: 'unforced_error_forehand', label: 'Faute CD' },
