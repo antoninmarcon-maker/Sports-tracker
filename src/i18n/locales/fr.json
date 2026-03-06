@@ -475,6 +475,8 @@
     "other_tennis_winner": "Autre coup gagnant",
     "double_fault": "Double faute",
     "return_error": "Faute au retour",
+    "first_serve_fault": "Faute 1ère de service",
+    "padel_first_serve_fault": "Faute 1ère de service",
     "unforced_error_forehand": "Faute CD",
     "unforced_error_backhand": "Faute revers",
     "net_error": "Filet",
