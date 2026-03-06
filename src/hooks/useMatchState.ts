@@ -41,6 +41,7 @@ export function useMatchState(matchId: string, ready: boolean = true) {
   const [pendingDirectionAction, setPendingDirectionAction] = useState<{
     team: Team; type: PointType; action: ActionType;
     customLabel?: string; sigil?: string; showOnCourt?: boolean;
+    firstServe?: boolean;
   } | null>(null);
 
   // Pre-selected player: chosen BEFORE court click in performance mode
@@ -141,10 +142,10 @@ export function useMatchState(matchId: string, ready: boolean = true) {
   // --- Direction mode helpers ---
   const startDirectionMode = useCallback((
     team: Team, type: PointType, action: ActionType,
-    x: number, y: number, customLabel?: string, sigil?: string, showOnCourt?: boolean
+    x: number, y: number, customLabel?: string, sigil?: string, showOnCourt?: boolean, firstServe?: boolean
   ) => {
     setDirectionOrigin({ x, y });
-    setPendingDirectionAction({ team, type, action, customLabel, sigil, showOnCourt });
+    setPendingDirectionAction({ team, type, action, customLabel, sigil, showOnCourt, firstServe });
   }, []);
 
   // Process a rally action: accumulate neutrals, conclude on scored/fault
@@ -175,7 +176,7 @@ export function useMatchState(matchId: string, ready: boolean = true) {
         setPoints(prev => [...prev, point]);
       } else {
         const shouldAssignPlayer = players.length > 0 && (
-          type === 'neutral' || team === 'blue' || (team === 'red' && type === 'fault')
+          team === 'blue' || (team === 'red' && type === 'fault')
         );
         if (shouldAssignPlayer) {
           setPendingPoint(point);
@@ -189,7 +190,7 @@ export function useMatchState(matchId: string, ready: boolean = true) {
 
   const completeDirectionAction = useCallback((endX: number, endY: number) => {
     if (!pendingDirectionAction || !directionOrigin) return;
-    const { team, type, action, customLabel, sigil, showOnCourt } = pendingDirectionAction;
+    const { team, type, action, customLabel, sigil, showOnCourt, firstServe } = pendingDirectionAction;
     const rallyAction: RallyAction = {
       id: crypto.randomUUID(),
       team, type, action,
@@ -202,6 +203,7 @@ export function useMatchState(matchId: string, ready: boolean = true) {
       ...(showOnCourt ? { showOnCourt: true } : {}),
       ...(preSelectedPlayerId ? { playerId: preSelectedPlayerId } : {}),
       ...(preSelectedRating ? { rating: preSelectedRating } : {}),
+      ...(firstServe !== undefined ? { firstServe } : {}),
     };
     setDirectionOrigin(null);
     setPendingDirectionAction(null);
@@ -237,10 +239,12 @@ export function useMatchState(matchId: string, ready: boolean = true) {
     if (customShowOnCourt !== undefined) delete (window as any).__pendingCustomShowOnCourt;
     const hasDirection = (window as any).__pendingHasDirection;
     if (hasDirection !== undefined) delete (window as any).__pendingHasDirection;
+    const firstServe = (window as any).__pendingFirstServe;
+    if (firstServe !== undefined) delete (window as any).__pendingFirstServe;
 
     // --- Performance Mode with direction: 1st click (origin) ---
     if (isPerformanceMode && hasDirection && !directionOrigin) {
-      startDirectionMode(selectedTeam, selectedPointType, selectedAction, x, y, customLabel, customSigil, customShowOnCourt);
+      startDirectionMode(selectedTeam, selectedPointType, selectedAction, x, y, customLabel, customSigil, customShowOnCourt, firstServe);
       return;
     }
 
@@ -258,6 +262,7 @@ export function useMatchState(matchId: string, ready: boolean = true) {
         ...(customShowOnCourt ? { showOnCourt: true } : {}),
         ...(preSelectedPlayerId ? { playerId: preSelectedPlayerId } : {}),
         ...(preSelectedRating ? { rating: preSelectedRating } : {}),
+        ...(firstServe !== undefined ? { firstServe } : {}),
       };
       const team = selectedTeam;
       const type = selectedPointType;
@@ -280,6 +285,7 @@ export function useMatchState(matchId: string, ready: boolean = true) {
       ...(customLabel ? { customActionLabel: customLabel } : {}),
       ...(customSigil ? { sigil: customSigil } : {}),
       ...(customShowOnCourt ? { showOnCourt: true } : {}),
+      ...(firstServe !== undefined ? { firstServe } : {}),
     };
     if (players.length > 0 && (point.type === 'neutral' || point.team === 'blue' || (point.team === 'red' && point.type === 'fault'))) {
       setPendingPoint(point);

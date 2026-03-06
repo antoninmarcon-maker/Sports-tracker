@@ -257,7 +257,9 @@
     "faultTennis": "Opponent Faults",
     "whoServes": "Who serves first?",
     "neutralTab": "Stats",
-    "touchCourtNeutral": "Tap the court where the action occurred"
+    "touchCourtNeutral": "Tap the court where the action occurred",
+    "firstServe": "1st Serve",
+    "secondServe": "2nd Serve"
   },
   "roster": {
     "defineRoster": "Set roster {{team}}",
@@ -333,7 +335,10 @@
     "blockOuts": "Block Out",
     "missedShots": "Missed shots",
     "turnovers": "Turnovers",
-    "foulsCommitted": "Fouls committed"
+    "foulsCommitted": "Fouls committed",
+    "firstServePct": "% 1st serve IN",
+    "wonOnFirst": "% pts won (1st)",
+    "wonOnSecond": "% pts won (2nd)"
   },
   "stats": {
     "noHeatmap": "Heatmap is not available for matches played without interactive court."
@@ -459,13 +464,17 @@
     "foul_committed": "Foul committed",
     "other_basket_fault": "Other fault",
     "tennis_ace": "Ace",
+    "service_winner": "Service winner",
     "winner_forehand": "Forehand winner",
     "winner_backhand": "Backhand winner",
     "volley_winner": "Volley winner",
     "smash": "Smash",
     "drop_shot_winner": "Drop shot winner",
+    "lob_winner": "Lob",
+    "passing_winner": "Passing",
     "other_tennis_winner": "Other winner",
     "double_fault": "Double fault",
+    "return_error": "Return error",
     "unforced_error_forehand": "FH error",
     "unforced_error_backhand": "BH error",
     "net_error": "Net",

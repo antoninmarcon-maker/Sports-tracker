@@ -11,8 +11,8 @@ export type BasketScoredAction = 'free_throw' | 'two_points' | 'three_points';
 export type BasketFaultAction = 'missed_shot' | 'turnover' | 'foul_committed' | 'other_basket_fault';
 
 // ---- TENNIS ----
-export type TennisScoredAction = 'winner_forehand' | 'winner_backhand' | 'tennis_ace' | 'volley_winner' | 'smash' | 'drop_shot_winner' | 'other_tennis_winner';
-export type TennisFaultAction = 'double_fault' | 'unforced_error_forehand' | 'unforced_error_backhand' | 'net_error' | 'out_long' | 'out_wide' | 'other_tennis_fault';
+export type TennisScoredAction = 'winner_forehand' | 'winner_backhand' | 'tennis_ace' | 'service_winner' | 'volley_winner' | 'smash' | 'drop_shot_winner' | 'lob_winner' | 'passing_winner' | 'other_tennis_winner';
+export type TennisFaultAction = 'double_fault' | 'unforced_error_forehand' | 'unforced_error_backhand' | 'return_error' | 'net_error' | 'out_long' | 'out_wide' | 'other_tennis_fault';
 
 // ---- PADEL ----
 export type PadelScoredAction = 'padel_ace' | 'vibora' | 'bandeja' | 'smash_padel' | 'volee' | 'bajada' | 'chiquita_winner' | 'par_3' | 'other_padel_winner';
@@ -67,16 +67,20 @@ export const BASKET_FAULT_ACTIONS: { key: BasketFaultAction; label: string }[] =
 
 export const TENNIS_SCORED_ACTIONS: { key: TennisScoredAction; label: string }[] = [
   { key: 'tennis_ace', label: 'Ace' },
+  { key: 'service_winner', label: 'Service gagnant' },
   { key: 'winner_forehand', label: 'Coup droit gagnant' },
   { key: 'winner_backhand', label: 'Revers gagnant' },
   { key: 'volley_winner', label: 'Volée gagnante' },
   { key: 'smash', label: 'Smash' },
   { key: 'drop_shot_winner', label: 'Amorti gagnant' },
+  { key: 'lob_winner', label: 'Lob' },
+  { key: 'passing_winner', label: 'Passing' },
   { key: 'other_tennis_winner', label: 'Autre coup gagnant' },
 ];
 
 export const TENNIS_FAULT_ACTIONS: { key: TennisFaultAction; label: string }[] = [
   { key: 'double_fault', label: 'Double faute' },
+  { key: 'return_error', label: 'Faute au retour' },
   { key: 'unforced_error_forehand', label: 'Faute CD' },
   { key: 'unforced_error_backhand', label: 'Faute revers' },
   { key: 'net_error', label: 'Filet' },
@@ -247,6 +251,8 @@ export interface RallyAction {
   endX?: number;
   endY?: number;
   rating?: 'negative' | 'neutral' | 'positive';
+  /** Tennis/Padel Service Tracking */
+  firstServe?: boolean;
 }
 
 export interface Point {
@@ -265,6 +271,8 @@ export interface Point {
   /** Rally sub-actions when Performance Mode is active */
   rallyActions?: RallyAction[];
   rating?: 'negative' | 'neutral' | 'positive';
+  /** Tennis/Padel Service Tracking */
+  firstServe?: boolean;
 }
 
 export interface SetData {

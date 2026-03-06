@@ -257,7 +257,9 @@
     "faultTennis": "Fautes adverses",
     "whoServes": "Qui sert en premier ?",
     "neutralTab": "Stats",
-    "touchCourtNeutral": "Touchez le terrain où l'action a eu lieu"
+    "touchCourtNeutral": "Touchez le terrain où l'action a eu lieu",
+    "firstServe": "1er Service",
+    "secondServe": "2ème Service"
   },
   "roster": {
     "defineRoster": "Définir le roster {{team}}",
@@ -333,7 +335,10 @@
     "blockOuts": "Block Out",
     "missedShots": "Tirs manqués",
     "turnovers": "Pertes de balle",
-    "foulsCommitted": "Fautes commises"
+    "foulsCommitted": "Fautes commises",
+    "firstServePct": "% 1ère balle",
+    "wonOnFirst": "% pts gagnés (1ère)",
+    "wonOnSecond": "% pts gagnés (2ème)"
   },
   "stats": {
     "noHeatmap": "La Heatmap n'est pas disponible pour les matchs joués sans terrain interactif."
@@ -459,13 +464,17 @@
     "foul_committed": "Faute commise",
     "other_basket_fault": "Autre faute",
     "tennis_ace": "Ace",
+    "service_winner": "Service gagnant",
     "winner_forehand": "Coup droit gagnant",
     "winner_backhand": "Revers gagnant",
     "volley_winner": "Volée gagnante",
     "smash": "Smash",
     "drop_shot_winner": "Amorti gagnant",
+    "lob_winner": "Lob",
+    "passing_winner": "Passing",
     "other_tennis_winner": "Autre coup gagnant",
     "double_fault": "Double faute",
+    "return_error": "Faute au retour",
     "unforced_error_forehand": "Faute CD",
     "unforced_error_backhand": "Faute revers",
     "net_error": "Filet",

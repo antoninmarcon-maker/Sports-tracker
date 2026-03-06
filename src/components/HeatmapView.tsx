@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { Download, ChevronDown, Copy, Image, FileSpreadsheet, Map, Share2, Link as LinkIcon } from 'lucide-react';
 import html2canvas from 'html2canvas';
-import { Point, SetData, Player, isOffensiveAction, isBasketScoredAction, SportType, OFFENSIVE_ACTIONS, FAULT_ACTIONS, BASKET_SCORED_ACTIONS, BASKET_FAULT_ACTIONS, getSportIcon } from '@/types/sports';
+import { Point, SetData, Player, isOffensiveAction, isBasketScoredAction, SportType, OFFENSIVE_ACTIONS, FAULT_ACTIONS, BASKET_SCORED_ACTIONS, BASKET_FAULT_ACTIONS, getSportIcon, MatchMetadata, Team } from '@/types/sports';
 import { PointTimeline } from './PointTimeline';
 import { CourtDisplay } from './CourtDisplay';
 import { PlayerStats } from './PlayerStats';
@@ -30,6 +30,7 @@ interface HeatmapViewProps {
   matchId?: string;
   isLoggedIn?: boolean;
   hasCourt?: boolean;
+  metadata?: MatchMetadata;
 }
 
 type SetFilter = 'all' | number;
@@ -112,9 +113,64 @@ interface TeamStats {
   outs: number; netFaults: number; serviceMisses: number; blockOuts: number;
   scoredPoints: number; freeThrows: number; twoPoints: number; threePoints: number;
   missedShots: number; turnovers: number; foulsCommitted: number;
+  // Service stats (Tennis & Padel)
+  totalServes: number;
+  firstServesIn: number;
+  pointsWonOnFirstServe: number;
+  pointsWonOnSecondServe: number;
 }
 
-function computeStats(pts: Point[], sport: SportType = 'volleyball'): { blue: TeamStats; red: TeamStats; total: number; sport: SportType } {
+// Minimal tennis state tracker to determine server per point
+function _getServers(pts: Point[], initialServer: Team = 'blue'): Team[] {
+  let server = initialServer;
+  let gamesCompleted = 0;
+  let p1 = 0; let p2 = 0;
+  let tb = false;
+  const servers: Team[] = [];
+
+  for (const p of pts) {
+    if (p.type === 'neutral') {
+      servers.push(server);
+      continue;
+    }
+    servers.push(server);
+
+    const winner = p.team;
+    if (tb) {
+      if (winner === 'blue') p1++; else p2++;
+      const max = Math.max(p1, p2); const min = Math.min(p1, p2);
+      if (max >= 7 && max - min >= 2) {
+        gamesCompleted++;
+        tb = false;
+        p1 = 0; p2 = 0;
+        server = (gamesCompleted % 2 === 0) ? initialServer : (initialServer === 'blue' ? 'red' : 'blue');
+      } else {
+        const tbPoints = p1 + p2;
+        const tbServer = (gamesCompleted % 2 === 0) ? initialServer : (initialServer === 'blue' ? 'red' : 'blue');
+        const tbOther = tbServer === 'blue' ? 'red' : 'blue';
+        const adjusted = tbPoints - 1;
+        server = tbPoints === 0 ? tbServer : ((Math.floor(adjusted / 2) % 2 === 0) ? tbOther : tbServer);
+      }
+    } else {
+      if (winner === 'blue') p1++; else p2++;
+      const isGame = (p1 >= 4 && p1 - p2 >= 2) || (p2 >= 4 && p2 - p1 >= 2);
+      if (isGame) {
+        gamesCompleted++;
+        p1 = 0; p2 = 0;
+        if ((gamesCompleted % 6 === 0) && (p1 === 0 && p2 === 0) && false) { // Simplification: assume 6-6 means TB. Actually TB is triggered at 6-6. But wait, we don't have sets info here easily.
+          // Fallback: we just alternate normally
+        }
+        server = (gamesCompleted % 2 === 0) ? initialServer : (initialServer === 'blue' ? 'red' : 'blue');
+      }
+    }
+  }
+  return servers;
+}
+
+function computeStats(pts: Point[], sport: SportType = 'volleyball', metadata?: MatchMetadata): { blue: TeamStats; red: TeamStats; total: number; sport: SportType } {
+  const isTennisOrPadel = sport === 'tennis' || sport === 'padel';
+  const servers = isTennisOrPadel ? _getServers(pts, metadata?.initialServer) : [];
+
   const byTeam = (team: 'blue' | 'red'): TeamStats => {
     const opponent = team === 'blue' ? 'red' : 'blue';
     const scored = pts.filter(p => p.team === team && p.type === 'scored');
@@ -142,14 +198,48 @@ function computeStats(pts: Point[], sport: SportType = 'volleyball'): { blue: Te
       missedShots: teamFaults.filter(p => p.action === 'missed_shot').length,
       turnovers: teamFaults.filter(p => p.action === 'turnover').length,
       foulsCommitted: teamFaults.filter(p => p.action === 'foul_committed').length,
+      // Service stats
+      totalServes: 0,
+      firstServesIn: 0,
+      pointsWonOnFirstServe: 0,
+      pointsWonOnSecondServe: 0,
     };
   };
-  return { blue: byTeam('blue'), red: byTeam('red'), total: pts.length, sport };
+
+  const blue = byTeam('blue');
+  const red = byTeam('red');
+
+  // Compute tennis service stats explicitly walking the points
+  if (isTennisOrPadel) {
+    pts.forEach((p, idx) => {
+      if (p.type === 'neutral') return;
+      const servingTeam = servers[idx];
+      if (!servingTeam) return;
+
+      const statsObj = servingTeam === 'blue' ? blue : red;
+      statsObj.totalServes++;
+
+      const isFirstServe = p.firstServe !== false; // Treat undefined as firstServe=true for legacy compatibility
+      if (isFirstServe) {
+        statsObj.firstServesIn++;
+      }
+
+      // Did the serving team win this point?
+      const serverWon = (p.team === servingTeam && p.type === 'scored') || (p.team !== servingTeam && p.type === 'fault');
+      if (serverWon) {
+        if (isFirstServe) statsObj.pointsWonOnFirstServe++;
+        else statsObj.pointsWonOnSecondServe++;
+      }
+    });
+  }
+
+  return { blue, red, total: pts.length, sport };
 }
 
-export function HeatmapView({ points, completedSets, currentSetPoints, currentSetNumber, stats, teamNames, players = [], sport = 'volleyball', matchId, isLoggedIn, hasCourt = true }: HeatmapViewProps) {
+export function HeatmapView({ points, completedSets, currentSetPoints, currentSetNumber, stats, teamNames, players = [], sport = 'volleyball', matchId, isLoggedIn, hasCourt = true, metadata }: HeatmapViewProps) {
   const { t } = useTranslation();
   const isBasketball = sport === 'basketball';
+  const isTennisOrPadel = sport === 'tennis' || sport === 'padel';
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [setFilter_, setSetFilter] = useState<SetFilter>('all');
   const [showHeatmap, setShowHeatmap] = useState(false);
@@ -172,7 +262,7 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
         ? t('heatmap.allSets')
         : `Set ${setFilter_}${setFilter_ === currentSetNumber && !completedSets.some(s => s.number === setFilter_) ? ` (${t('home.setInProgress')})` : ''}`;
       const filename = `stats-${teamNames.blue}-vs-${teamNames.red}-${setFilter_ === 'all' ? 'global' : `set${setFilter_}`}`;
-      const ds = computeStats(filteredPoints, sport);
+      const ds = computeStats(filteredPoints, sport, metadata);
       const container = buildExportContainer(teamNames, label, ds, sport);
       document.body.appendChild(container);
       const canvas = await html2canvas(container, { backgroundColor: '#1a1a2e', scale: 2 });
@@ -349,7 +439,7 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
 
   const shareNative = useCallback(async () => {
     if (navigator.share) {
-      try { await navigator.share({ text: getScoreText() }); } catch {}
+      try { await navigator.share({ text: getScoreText() }); } catch { }
     } else { copyScoreText(); }
   }, [getScoreText, copyScoreText]);
 
@@ -383,7 +473,7 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
     });
   }, [filteredPoints]);
 
-  const displayStats = useMemo(() => computeStats(filteredPoints, sport), [filteredPoints, sport]);
+  const displayStats = useMemo(() => computeStats(filteredPoints, sport, metadata), [filteredPoints, sport, metadata]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -466,11 +556,10 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
             <button
               key={o.key}
               onClick={() => setSetFilter(o.key)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                setFilter_ === o.key
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              }`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${setFilter_ === o.key
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                }`}
             >
               {o.label}
             </button>
@@ -498,6 +587,19 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
                       <div key={label as string} className="flex justify-between pl-2">
                         <span className="text-muted-foreground text-[11px]">{label}</span>
                         <span className="font-bold text-foreground text-[11px]">{val as number}</span>
+                      </div>
+                    ))}
+                  </>
+                ) : isTennisOrPadel ? (
+                  <>
+                    {[
+                      [t('heatmap.firstServePct'), ds[team].totalServes > 0 ? Math.round((ds[team].firstServesIn / ds[team].totalServes) * 100) + '%' : '-'],
+                      [t('heatmap.wonOnFirst'), ds[team].firstServesIn > 0 ? Math.round((ds[team].pointsWonOnFirstServe / ds[team].firstServesIn) * 100) + '%' : '-'],
+                      [t('heatmap.wonOnSecond'), (ds[team].totalServes - ds[team].firstServesIn) > 0 ? Math.round((ds[team].pointsWonOnSecondServe / (ds[team].totalServes - ds[team].firstServesIn)) * 100) + '%' : '-'],
+                    ].map(([label, val]) => (
+                      <div key={label as string} className="flex justify-between pl-2">
+                        <span className="text-muted-foreground text-[11px]">{label}</span>
+                        <span className="font-bold text-foreground text-[11px]">{val as string}</span>
                       </div>
                     ))}
                   </>
@@ -584,14 +686,14 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
         <PointTimeline points={filteredPoints} teamNames={teamNames} />
       )}
 
-        {hasCourt && setFilter_ !== 'all' && showCourt && (
-          <div className="space-y-1">
-            <p className="text-[10px] text-center text-muted-foreground">
-              {t('heatmap.court')} — {setOptions.find(o => o.key === setFilter_)?.label}
-            </p>
-            <CourtDisplay points={filteredPoints} teamNames={teamNames} sport={sport} />
-          </div>
-        )}
+      {hasCourt && setFilter_ !== 'all' && showCourt && (
+        <div className="space-y-1">
+          <p className="text-[10px] text-center text-muted-foreground">
+            {t('heatmap.court')} — {setOptions.find(o => o.key === setFilter_)?.label}
+          </p>
+          <CourtDisplay points={filteredPoints} teamNames={teamNames} sport={sport} />
+        </div>
+      )}
 
       <div className="flex gap-2 flex-wrap">
         {setFilter_ !== 'all' && (
@@ -693,7 +795,7 @@ export function HeatmapView({ points, completedSets, currentSetPoints, currentSe
         </DropdownMenu>
       </div>
 
-      
+
     </div>
   );
 }

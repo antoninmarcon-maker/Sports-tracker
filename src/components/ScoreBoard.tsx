@@ -60,6 +60,7 @@ export function ScoreBoard({
   const [menuTeam, setMenuTeam] = useState<Team | null>(null);
   const [menuTab, setMenuTab] = useState<MenuTab>('scored');
   const [confirmEndSet, setConfirmEndSet] = useState(false);
+  const [firstServe, setFirstServe] = useState(true);
 
   const isBasketball = sport === 'basketball';
   const isTennisOrPadel = sport === 'tennis' || sport === 'padel';
@@ -89,6 +90,10 @@ export function ScoreBoard({
     // Store assignToPlayer preference for ALL action types (default true)
     (window as any).__pendingCustomAssignToPlayer = assignToPlayer ?? true;
 
+    // Auto-detect double fault as 2nd serve, otherwise use toggle state
+    const isDoubleFault = action === 'double_fault' || action === 'padel_double_fault';
+    (window as any).__pendingFirstServe = isDoubleFault ? false : firstServe;
+
     if (customLabel) {
       (window as any).__pendingCustomActionLabel = customLabel;
     }
@@ -107,6 +112,7 @@ export function ScoreBoard({
   const openMenu = (team: Team) => {
     setMenuTeam(team);
     setMenuTab('scored');
+    setFirstServe(true);
   };
 
   const closeMenu = () => {
@@ -171,9 +177,8 @@ export function ScoreBoard({
           <span className="text-sm font-mono font-bold text-foreground tabular-nums">{formatTime(chronoSeconds)}</span>
           <button
             onClick={chronoRunning ? onPauseChrono : onStartChrono}
-            className={`p-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all ${
-              !chronoRunning && !isFinished ? 'animate-pulse ring-2 ring-primary/40' : ''
-            }`}
+            className={`p-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all ${!chronoRunning && !isFinished ? 'animate-pulse ring-2 ring-primary/40' : ''
+              }`}
           >
             {chronoRunning ? <Pause size={12} /> : <Play size={12} />}
           </button>
@@ -273,55 +278,53 @@ export function ScoreBoard({
       </div>
 
       {!isTennisOrPadel && (
-      <div className="flex items-center justify-center gap-4">
-        <div className="flex-1 text-center">
-          <div className="flex items-center justify-center gap-1.5">
-            <p className={`text-xs font-semibold uppercase tracking-widest ${left === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{teamNames[left]}</p>
-            {sport === 'volleyball' && servingTeam === left && <span className="text-[10px]" title="Au service">🏐</span>}
-          </div>
-          <p className={`text-5xl font-black tabular-nums ${left === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[left]}</p>
-          {menuTeam === left && (
-            <div className="flex justify-center mt-1">
-              <ChevronDown size={28} strokeWidth={3} className={`${left === 'blue' ? 'text-team-blue' : 'text-team-red'} opacity-60 animate-bounce`} />
+        <div className="flex items-center justify-center gap-4">
+          <div className="flex-1 text-center">
+            <div className="flex items-center justify-center gap-1.5">
+              <p className={`text-xs font-semibold uppercase tracking-widest ${left === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{teamNames[left]}</p>
+              {sport === 'volleyball' && servingTeam === left && <span className="text-[10px]" title="Au service">🏐</span>}
             </div>
-          )}
-          <button
-            onClick={() => openMenu(left)}
-            disabled={!!selectedTeam || isFinished || waitingForNewSet}
-            className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${
-              left === 'blue'
-                ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
-                : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
-            }`}
-          >
-            <Plus size={24} className="mx-auto" />
-          </button>
-        </div>
-        <div className="text-muted-foreground text-lg font-bold">VS</div>
-        <div className="flex-1 text-center">
-          <div className="flex items-center justify-center gap-1.5">
-            <p className={`text-xs font-semibold uppercase tracking-widest ${right === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{teamNames[right]}</p>
-            {sport === 'volleyball' && servingTeam === right && <span className="text-[10px]" title="Au service">🏐</span>}
+            <p className={`text-5xl font-black tabular-nums ${left === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[left]}</p>
+            {menuTeam === left && (
+              <div className="flex justify-center mt-1">
+                <ChevronDown size={28} strokeWidth={3} className={`${left === 'blue' ? 'text-team-blue' : 'text-team-red'} opacity-60 animate-bounce`} />
+              </div>
+            )}
+            <button
+              onClick={() => openMenu(left)}
+              disabled={!!selectedTeam || isFinished || waitingForNewSet}
+              className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${left === 'blue'
+                  ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
+                  : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
+                }`}
+            >
+              <Plus size={24} className="mx-auto" />
+            </button>
           </div>
-          <p className={`text-5xl font-black tabular-nums ${right === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[right]}</p>
-          {menuTeam === right && (
-            <div className="flex justify-center mt-1">
-              <ChevronDown size={28} strokeWidth={3} className={`${right === 'blue' ? 'text-team-blue' : 'text-team-red'} opacity-60 animate-bounce`} />
+          <div className="text-muted-foreground text-lg font-bold">VS</div>
+          <div className="flex-1 text-center">
+            <div className="flex items-center justify-center gap-1.5">
+              <p className={`text-xs font-semibold uppercase tracking-widest ${right === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{teamNames[right]}</p>
+              {sport === 'volleyball' && servingTeam === right && <span className="text-[10px]" title="Au service">🏐</span>}
             </div>
-          )}
-          <button
-            onClick={() => openMenu(right)}
-            disabled={!!selectedTeam || isFinished || waitingForNewSet}
-            className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${
-              right === 'blue'
-                ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
-                : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
-            }`}
-          >
-            <Plus size={24} className="mx-auto" />
-          </button>
+            <p className={`text-5xl font-black tabular-nums ${right === 'blue' ? 'text-team-blue' : 'text-team-red'}`}>{score[right]}</p>
+            {menuTeam === right && (
+              <div className="flex justify-center mt-1">
+                <ChevronDown size={28} strokeWidth={3} className={`${right === 'blue' ? 'text-team-blue' : 'text-team-red'} opacity-60 animate-bounce`} />
+              </div>
+            )}
+            <button
+              onClick={() => openMenu(right)}
+              disabled={!!selectedTeam || isFinished || waitingForNewSet}
+              className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${right === 'blue'
+                  ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
+                  : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
+                }`}
+            >
+              <Plus size={24} className="mx-auto" />
+            </button>
+          </div>
         </div>
-      </div>
       )}
 
       {/* Tennis/Padel: initial server selection */}
@@ -363,11 +366,10 @@ export function ScoreBoard({
             <button
               onClick={() => openMenu(left)}
               disabled={!!selectedTeam || isFinished || waitingForNewSet}
-              className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${
-                left === 'blue'
+              className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${left === 'blue'
                   ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
                   : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
-              }`}
+                }`}
             >
               <Plus size={24} className="mx-auto" />
             </button>
@@ -386,11 +388,10 @@ export function ScoreBoard({
             <button
               onClick={() => openMenu(right)}
               disabled={!!selectedTeam || isFinished || waitingForNewSet}
-              className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${
-                right === 'blue'
+              className={`mt-2 w-full py-3 rounded-xl font-bold text-lg transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${right === 'blue'
                   ? 'bg-team-blue/20 text-team-blue border-2 border-team-blue/30 hover:bg-team-blue/30'
                   : 'bg-team-red/20 text-team-red border-2 border-team-red/30 hover:bg-team-red/30'
-              }`}
+                }`}
             >
               <Plus size={24} className="mx-auto" />
             </button>
@@ -401,22 +402,41 @@ export function ScoreBoard({
       {/* Action selection menu */}
       {menuTeam && (
         <div className="bg-card rounded-xl border border-border p-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+          {/* Tennis/Padel Service Toggle */}
+          {isTennisOrPadel && menuTeam === servingTeam && (
+            <div className="flex justify-center mb-1">
+              <div className="bg-secondary flex rounded-lg p-0.5">
+                <button
+                  onClick={() => setFirstServe(true)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${firstServe ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                >
+                  {t('scoreboard.firstServe')}
+                </button>
+                <button
+                  onClick={() => setFirstServe(false)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${!firstServe ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                >
+                  {t('scoreboard.secondServe')}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <div className="flex gap-2 flex-1">
               <button
                 onClick={() => setMenuTab('scored')}
-                className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                  menuTab === 'scored' ? 'bg-action-scored text-action-scored-foreground' : 'bg-secondary text-secondary-foreground'
-                }`}
+                className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${menuTab === 'scored' ? 'bg-action-scored text-action-scored-foreground' : 'bg-secondary text-secondary-foreground'
+                  }`}
               >
                 ⚡ {getScoredLabel()}
               </button>
               {(!isBasketball || menuTeam === 'blue') && (
                 <button
                   onClick={() => setMenuTab('fault')}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                    menuTab === 'fault' ? 'bg-action-fault text-action-fault-foreground' : 'bg-secondary text-secondary-foreground'
-                  }`}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${menuTab === 'fault' ? 'bg-action-fault text-action-fault-foreground' : 'bg-secondary text-secondary-foreground'
+                    }`}
                 >
                   ❌ {getFaultLabel()}
                 </button>
@@ -424,9 +444,8 @@ export function ScoreBoard({
               {hasNeutralActions && (
                 <button
                   onClick={() => setMenuTab('neutral')}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                    menuTab === 'neutral' ? 'bg-muted text-foreground' : 'bg-secondary text-secondary-foreground'
-                  }`}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${menuTab === 'neutral' ? 'bg-muted text-foreground' : 'bg-secondary text-secondary-foreground'
+                    }`}
                 >
                   📊 {t('scoreboard.neutralTab')}
                 </button>
@@ -446,13 +465,12 @@ export function ScoreBoard({
               <button
                 key={a.customId ?? a.key}
                 onClick={() => handleActionSelect(a.key as ActionType, a.customId ? a.label : undefined, a.sigil, a.showOnCourt, (a as any).assignToPlayer)}
-                className={`py-2.5 px-2 text-xs font-semibold rounded-lg transition-all active:scale-95 ${
-                  menuTab === 'scored'
+                className={`py-2.5 px-2 text-xs font-semibold rounded-lg transition-all active:scale-95 ${menuTab === 'scored'
                     ? 'bg-action-scored/10 text-action-scored hover:bg-action-scored/20 border border-action-scored/20'
                     : menuTab === 'fault'
                       ? 'bg-action-fault/10 text-action-fault hover:bg-action-fault/20 border border-action-fault/20'
                       : 'bg-muted/50 text-foreground hover:bg-muted border border-border'
-                }`}
+                  }`}
               >
                 {a.customId ? a.label : t(`actions.${a.key}`, a.label)}
                 {a.sigil && <span className="ml-1 text-[10px] opacity-60">({a.sigil})</span>}
